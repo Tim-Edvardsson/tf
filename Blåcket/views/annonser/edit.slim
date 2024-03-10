@@ -1,0 +1,15 @@
+h1#ditt_konto_header Här kan du redigera och uppdatera din annons 
+
+form#form action="/user/#{result['id']}/update" method="post" enctype="multipart/form-data"
+  input#content type="text" name="content" value="#{result['content']}"
+  input#content type="text" name="info" value="#{result['info']}"
+  input#content type="number" name="pris" value="#{result['pris']}"
+  input#img type="file" name="img" accept="image/*"
+  input type="hidden" name="id" value="#{result['id']}"
+  label#genre_label for="genre-select" Välj genre:
+  select#genre_select name="genre"
+    option(value="Fordon" selected=(result['genre'] == 'Fordon')) Fordon
+    option(value="Boende" selected=(result['genre'] == 'Boende')) Boende
+    option(value="Elektronik" selected=(result['genre'] == 'Elektronik')) Elektronik
+    option(value="Annat" selected=(result['genre'] == 'Annat')) Annat
+  input#submit_btn type="submit" value="Spara ändringar"

@@ -1,0 +1,27 @@
+section#section_alla_annonser
+
+  h1 Alla annonser
+
+  form#search_form action="/annonser/search" method="GET"
+    Input type="text" name="query" placeholder="Sök bland annonser"
+
+    label for="genre-select" Sortera efter genre:
+    select#genre-select
+      option(value="Alla") Alla
+      option(value="Fordon") Fordon
+      option(value="Boende") Boende
+      option(value="Elektronik") Elektronik
+      option(value="Annat") Annat
+
+  ol#annonser_lista
+    - index = annonser.length
+    - annonser.each do |annon|
+      div.anons-element data-genre=annon['genre']
+        span = index
+        - index -= 1
+        a href="/annons/#{annon['id']}"
+          | #{annon["content"]}, annonserare, 
+          span id="username1" = annon["username"]
+        - if session[:id] == 1
+          form action="/annons/#{annon['id']}/delete" method="POST"
+            input#delete_btn_1 type="submit" value="Delete"

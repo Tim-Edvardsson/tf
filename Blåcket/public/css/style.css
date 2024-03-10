@@ -1,0 +1,346 @@
+* {
+  padding: 0;
+}
+
+body {
+  height: 110%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: lightblue;
+}
+
+nav {
+  background-color: aliceblue;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  font-family: Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+  text-decoration:none;
+  font-size: 1.2em;
+  font-weight:800;
+  border-style: solid;
+  height: 10vh;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+}
+
+/* #header_login{
+  display: none;
+} */
+
+nav a h1 {
+  font-size: 2.5em;
+  color:rgb(0, 87, 87);
+  border-radius: 10px;
+  border: 2px solid black;
+  width: fit-content;
+  padding: 5%;
+}
+
+#header_link{
+  text-decoration: none;
+}
+
+nav a {
+  color:rgb(60, 71, 114);
+}
+
+section {
+  font-size: xx-large;
+  color: rgb(60, 71, 114);
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 40vh;
+  width: 40vh;
+  border-radius: 30px;
+  border: 2px solid black;
+  margin: 5%;
+}
+
+section form{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content:space-between;
+  height: 10vh;
+}
+
+#login_section form{
+  height: 7vh;
+}
+
+#fel_meddelande{
+  font-size: medium;
+  color: red;
+  background-color: aliceblue;
+}
+
+#fel_meddelande_reg{
+  font-size: medium;
+  color: red;
+  background-color: aliceblue;
+  margin-top: 7%;
+}
+
+#section_alla_annonser{
+  display: flex;
+  align-items: center;
+  width: 45vw;
+  height: fit-content;
+}
+
+.hidden {
+  display: none;
+}
+
+.label{
+  font-size: xx-large;
+  color: rgb(60, 71, 114);
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2%;
+}
+
+#section_alla_annonser a{
+  font-size: xx-large;
+  text-decoration: none;
+  border: 1px solid black;
+  background-color: aliceblue;
+  color: black;
+}
+
+#annonser_lista{
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+div.anons-element{
+  margin: 10px;
+}
+
+div.use-element{
+  margin: 10px;
+}
+
+#genre_select{
+  margin-top: -5%;
+  margin-bottom: 4%;
+}
+
+#section_alla_annonser li{
+  margin: 10px;
+}
+
+#username1 {
+  color: rgb(0, 119, 255); /* Ange den önskade färgen här */
+  text-decoration: none;
+}
+
+#section_alla_annonser ol {
+  list-style-position: inside;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-wrap: wrap;
+  word-break:normal;
+}
+
+#visar_annonser{
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  margin: 1%;
+}
+
+#kommentarer{
+  width: 20vw;
+}
+
+#kommentarer_användare{
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+#kommentarer_användare {
+  background-color: aliceblue;
+  border: black solid 1px;
+  margin-top: 2%;
+  width: 268.8px;
+}
+
+#section_alla_annonser h1{
+  text-decoration: underline;
+}
+
+#användare_skapare_mod {
+  background: linear-gradient(to right, #ef5350, #f48fb1, #7e57c2, #2196f3, #26c6da, #43a047, #eeff41, #f9a825, #ff5722);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+#användare_skapare{
+  color: #008cff;
+}
+
+.img_size {
+  max-width: 714px;
+  max-height: 476px;
+  border: 2px solid rgb(255, 255, 255);
+  margin-bottom: -35px;
+}
+
+#annons_info h2 {
+  font-size: 40px;
+  font-family: 'Courier New', Courier, monospace;
+  text-decoration: underline;
+  margin-bottom: -15px;
+}
+
+#annons_info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: fit-content;
+}
+
+#pris{
+  font-weight: bold;
+  font-size: 25px;
+  font-family: 'Courier New', Courier, monospace;
+  margin-bottom: -20px;
+}
+
+#seller {
+  font-size: 25px;
+  font-family: 'Courier New', Courier, monospace;
+  margin-bottom: 10px;
+}
+
+#information {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 17px;
+  margin-bottom: 0px;
+}
+
+#section_dina_annonser{
+  margin: 2%;
+  display: flex;
+  width: 45vw;
+  align-items: center;
+  height: fit-content;
+  word-break:break-all;
+}
+
+#dina_annonser_container{
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center ;
+  height: fit-content;
+  width: fit-content;
+}
+
+#section_dina_annonser a{
+  text-decoration: none;
+  border: 1px solid rgb(0, 0, 0);
+  color: rgb(0, 0, 0);
+  margin: 3px;
+  border-radius: 7px;
+}
+
+#section_dina_annonser h1{
+  text-decoration: underline;
+}
+
+#delete_btn_1{
+  margin: 3px;
+  height: 2rem;
+  width: 5rem;
+  background-color: brown;
+  color: rgb(0, 0, 0);
+  border-radius: 7px;
+}
+
+#section_dina_annonser form input{
+  margin: 3px;
+  height: 2rem;
+  width: 5rem;
+  background-color: brown;
+  color: rgb(0, 0, 0);
+  border-radius: 7px;
+}
+
+#uppdatera_knapp{
+  background-color: rgb(148, 255, 148);
+  font-weight: normal;
+}
+
+#annons_knapp{
+  background-color: aliceblue;
+}
+
+#add_new{
+  background-color: rgb(148, 255, 148);
+  color: rgb(0, 0, 0);
+  border-radius: 7px;
+  margin: 3px;
+  width: 125px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  background-color: rgb(119, 255, 235);
+  font-style: italic;
+  font-weight: bold;
+  font-size: large;
+}
+
+#ditt_konto_header{
+  font-size: 50px;
+  color: rgb(0, 0, 0);
+  border-radius: 7px;
+  border: 1px solid rgb(0, 0, 0);
+  background-color: ivory;
+}
+
+#undertext_ditt_konto{
+  font-size: 20px;
+  color: rgb(0, 0, 0);
+  border-radius: 7px;
+  border: 1px solid rgb(0, 0, 0);
+  background-color: ivory;
+}
+
+#username{
+  text-decoration: underline;
+}
+
+#content {
+  width: 100%;
+  height: 30px;
+  margin-bottom: 10px; /* lägger till ett avstånd mellan textfältet och knappen */
+}
+
+#submit_btn {
+  width: 100%;
+}
+#submit_btn_1{
+  width: 268.8px;
+}
+

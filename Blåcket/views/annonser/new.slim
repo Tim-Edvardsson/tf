@@ -1,0 +1,14 @@
+h1#ditt_konto_header Hej #{username}, här kan du lägga till fler annonser
+
+form#form action="/annonser/new" method="POST" enctype="multipart/form-data"
+  input#content type="text" name="content" placeholder="Namnet på din annons"
+  input#content type="text" name="info" placeholder="Information om din annons"
+  input#content type="number" name="pris" placeholder="Priset på din vara"
+  input#img type="file" name="img" accept="image/*"
+  label#genre_label for="genre-select" Välj genre:
+  select#genre_select name="genre"
+    option(value="Fordon") Fordon
+    option(value="Boende") Boende
+    option(value="Elektronik") Elektronik
+    option(value="Annat") Annat
+  input#submit_btn type="submit" value="Skapa annons"

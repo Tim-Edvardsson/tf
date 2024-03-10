@@ -1,0 +1,34 @@
+article#visar_annonser
+  - if result
+    - if result['img']
+      img.img_size src="data:image/jpeg;base64,#{Base64.encode64(result['img'])}" alt="Bild"
+    div#annons_info
+      h2 #{result['content']}
+      p#pris #{result['pris']}kr
+      p#seller Säljare: #{username}
+      p#information Information: #{result['info']}
+  - else
+    p Annonsen kunde inte hittas.
+  
+  div#kommentarer
+    p
+    - if session[:id]
+      form#form action="/comment/new" method="POST" accept-charset="UTF-8"
+        input#content type="text" name="comment" placeholder="Skriv din kommentar här"
+        input#submit_btn_1 type="submit" value="Kommentera"
+  
+    div#kommentarer_användare  
+      - kommentarer.each do |kommentar|
+        div.comment-container
+          - if kommentar['kommentar_username'] == "Timmy"
+            p#användare_skapare_mod
+              | #{kommentar['kommentar_username']}: #{kommentar['comment']}
+          - elsif kommentar['user_id'] == result['user_id']
+            p#användare_skapare
+              | #{kommentar['kommentar_username']}: #{kommentar['comment']}
+          - else
+            p#användare_andra
+              | #{kommentar['kommentar_username']}: #{kommentar['comment']}
+          - if session[:id] && (session[:id] == result['user_id'] || session[:id] == 1)
+            form#delete_form action="/comment/#{kommentar['kommentar_id']}/delete" method="POST"
+              input#delete_btn type="submit" value="Delete"

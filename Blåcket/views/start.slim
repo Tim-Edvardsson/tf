@@ -1,0 +1,10 @@
+section
+  p Register
+  form#form action="users/new" method="POST"
+    input#content type="text" name="username" placeholder="Enter username"
+    input#content type="password" name="password" placeholder="Enter password"
+    input#content type="password" name="password_confirm" placeholder="Enter password again"
+    input#submit_btn type="submit" value="Registrera ny användare"
+
+  - if session[:error]
+    p#fel_meddelande_reg= session.delete(:error)

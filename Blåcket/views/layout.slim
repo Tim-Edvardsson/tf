@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+html lang="en"
+  head
+    meta charset="UTF-8"/
+    meta name="viewport" content="width=device-width, initial-scale=1.0"/
+    link rel="stylesheet" href="/css/style.css"/
+    title Document
+  body
+    nav
+      a#header_link href="/" 
+        h1#nav_header BLÅCKET 
+      a href="/annonser" Se annonser
+      - if session[:id]
+        a href="/konto" Ditt konto
+        a href="/logout" Logga ut
+      - else
+        a#header_login href="/login" Log in
+
+  <script src="js/script.js"></script>
+== yield
