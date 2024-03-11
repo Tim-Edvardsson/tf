@@ -198,6 +198,11 @@ get('/annons/:id') do
   slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
 end
 
+def update_last_comment_time
+  # Uppdatera tiden för senaste kommentaren till aktuell tidpunkt
+  session[:last_comment_time] = Time.now
+end
+
 def last_comment_time_expired?
   if session[:last_comment_time].nil?
     return true
@@ -215,10 +220,14 @@ post('/comment/new') do
   comment = params[:comment]
   user_id = session[:id].to_i
   annons_id = session[:current_annons_id].to_i
+
+  # Kontrollera om kommentaren är tom
   if comment.nil? || comment.strip.empty?
     session[:error] = "Kommentaren får inte vara tom."
     redirect("/annons/#{annons_id}")
   end
+
+  # Om kommentaren inte är tom och det inte har varit för snabbt sedan förra kommentaren
   if last_comment_time_expired?
     db = SQLite3::Database.new("db/todo.db")
     db.execute("INSERT INTO kommentarer (comment, user_id) VALUES (?, ?)", comment, user_id)
@@ -237,20 +246,20 @@ post('/comment/:kommentar_id/delete') do
   user_id = session[:id].to_i
   annons_id = session[:current_annons_id].to_i
   db = SQLite3::Database.new("db/todo.db")
-  db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
-  db.execute("DELETE FROM annons_kommentarer WHERE kommentar_id = ?", kommentar_id)
+  db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?",kommentar_id)
+  db.execute("DELETE FROM annons_kommentarer WHERE kommentar_id = ?",kommentar_id)
   redirect("/annons/#{annons_id}")
 end
 
 post('/annons/:id/delete') do
   id = params[:id].to_i
   db = SQLite3::Database.new("db/todo.db")
-  kommentar_ids = db.execute("SELECT kommentar_id FROM annons_kommentarer WHERE annons_id = ?", id).flatten #Ta bort
+  kommentar_ids = db.execute("SELECT kommentar_id FROM annons_kommentarer WHERE annons_id = ?", id).flatten
   kommentar_ids.each do |kommentar_id|
-    db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
+    db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?",kommentar_id)
   end
-  db.execute("DELETE FROM annons_kommentarer WHERE annons_id = ?", id)
-  db.execute("DELETE FROM annonser WHERE id = ?", id)
+  db.execute("DELETE FROM annons_kommentarer WHERE annons_id = ?",id)
+  db.execute("DELETE FROM annonser WHERE id = ?",id)
   redirect('/annonser')
 end
 
@@ -259,7 +268,7 @@ end
 post('/user/:id/delete') do
   id = params[:id].to_i
   db = SQLite3::Database.new("db/todo.db")
-  kommentar_ids = db.execute("SELECT kommentar_id FROM annons_kommentarer WHERE annons_id = ?", id).flatten #Ta bort
+  kommentar_ids = db.execute("SELECT kommentar_id FROM annons_kommentarer WHERE annons_id = ?", id).flatten
   kommentar_ids.each do |kommentar_id|
     db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
   end

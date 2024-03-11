@@ -120,6 +120,7 @@ section form{
   border: 1px solid black;
   background-color: aliceblue;
   color: black;
+  margin: 10px;
 }
 
 #annonser_lista{
@@ -127,7 +128,7 @@ section form{
   flex-direction: column-reverse;
 }
 
-#anons_lement{
+.anons-element{
   margin: 10px;
 }
 
