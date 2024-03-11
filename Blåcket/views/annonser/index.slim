@@ -16,7 +16,7 @@ section#section_alla_annonser
   ol#annonser_lista
     - index = annonser.length
     - annonser.each do |annon|
-      div.anons-element data-genre=annon['genre']
+      div#anons_element data-genre=annon['genre']
         span = index
         - index -= 1
         a href="/annons/#{annon['id']}"

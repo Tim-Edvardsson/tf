@@ -1,9 +1,12 @@
 section#login_section
     p Login 
-    form#form action="login" method="POST"
-        input type="text" name="username" placeholder="Enter username"
-        input#password type="password" name="password" placeholder="Enter password"
-        input#submit_btn type="submit" value="Logga in"
+    form#form_login action="login" method="POST"
+        input#content type="text" name="username" placeholder="Enter username"
+        input#content type="password" name="password" placeholder="Enter password"
+        input#submit_btn type="submit" value="Logga in"  
+
+    - if session[:error]
+        p#fel_meddelande= session.delete(:error)
 
     - if locals[:error]
-    p#fel_meddelande= locals[:error]    
+        p#fel_meddelande= locals[:error]    

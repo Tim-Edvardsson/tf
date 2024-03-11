@@ -34,6 +34,10 @@ nav {
   display: none;
 } */
 
+#form_login{
+  height: 56.7px;
+}
+
 nav a h1 {
   font-size: 2.5em;
   color:rgb(0, 87, 87);
@@ -74,12 +78,9 @@ section form{
   height: 10vh;
 }
 
-#login_section form{
-  height: 7vh;
-}
-
 #fel_meddelande{
   font-size: medium;
+  width: fit-content;
   color: red;
   background-color: aliceblue;
 }
@@ -126,11 +127,7 @@ section form{
   flex-direction: column-reverse;
 }
 
-div.anons-element{
-  margin: 10px;
-}
-
-div.use-element{
+#anons_lement{
   margin: 10px;
 }
 
@@ -334,12 +331,13 @@ div.use-element{
 #content {
   width: 100%;
   height: 30px;
-  margin-bottom: 10px; /* lägger till ett avstånd mellan textfältet och knappen */
+  margin-bottom: 5px; /* lägger till ett avstånd mellan textfältet och knappen */
 }
 
 #submit_btn {
   width: 100%;
 }
+
 #submit_btn_1{
   width: 268.8px;
 }

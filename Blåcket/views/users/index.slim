@@ -17,7 +17,7 @@ section#section_dina_annonser
 
     div#dina_annonser_container
         - user.each do |use|
-            div.anons-element data-genre=use['genre']
+            div#anons_element data-genre=use['genre']
                 li
                     a#annons_knapp href="user/#{use['id']}" #{use["content"]} 
                     a#uppdatera_knapp href="user/#{use['id']}/edit" Uppdatera din annons

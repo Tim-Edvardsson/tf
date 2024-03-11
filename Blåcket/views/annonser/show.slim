@@ -16,6 +16,8 @@ article#visar_annonser
       form#form action="/comment/new" method="POST" accept-charset="UTF-8"
         input#content type="text" name="comment" placeholder="Skriv din kommentar här"
         input#submit_btn_1 type="submit" value="Kommentera"
+    - if session[:error]
+      p#fel_meddelande= session.delete(:error)  
   
     div#kommentarer_användare  
       - kommentarer.each do |kommentar|
