@@ -8,12 +8,10 @@ require 'sinatra/flash'
 #Eventuellt implementerar eleven "strong params" mha black/whitelist (valbart).
 #Eleven kan även använda sig av Sinatras CSRF-funktionalitet(valbart).
 #Flash - kan göras med kommentaren
-
 #ER
 #Loggbok
 #Filter och Search
 #För lång
-
 #Tar bort en annons, tar bort kommentarerna med hjälp av relationstabellen
 #Index inkrementering
 #_______________________________________________________________________________________________________________________
