@@ -12,6 +12,7 @@ require 'sinatra/flash'
 #ER
 #Loggbok
 #Filter och Search
+#För lång
 
 #Tar bort en annons, tar bort kommentarerna med hjälp av relationstabellen
 #Index inkrementering
