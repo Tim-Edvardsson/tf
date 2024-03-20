@@ -3,7 +3,7 @@ require 'slim'
 require 'sqlite3'
 require 'bcrypt'
 require 'sinatra/reloader'
-require 'sinatra/flash'
+#require 'sinatra/flash'
 
 #Eventuellt implementerar eleven "strong params" mha black/whitelist (valbart).
 #Eleven kan även använda sig av Sinatras CSRF-funktionalitet(valbart).
@@ -98,7 +98,7 @@ post('/login') do
     session[:id] = result["id"]
     redirect '/konto'
   else
-    slim :login, locals: { error: "Fel användarnamn eller lösenord" }
+    slim(:login, locals: {error: "Fel användarnamn eller lösenord"})
   end
 end
 
@@ -156,7 +156,7 @@ get('/user/:id') do
     kommentar = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE kommentar_id = ?", kommentar_id).first
     kommentarer << kommentar if kommentar
   end
-  slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer })
+  slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
 end
 
 get('/annonser/new') do
