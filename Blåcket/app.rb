@@ -7,9 +7,9 @@ require 'sinatra/flash'
 
 #ER
 #Loggbok
-#För lång
+#För lång kräver javascript
 #Felhantering
-#Css
+#Tid
 #_______________________________________________________________________________________________________________________
 
 enable :sessions
@@ -18,6 +18,12 @@ def connect_to_db(path)
   db = SQLite3::Database.new(path)
   db.results_as_hash = true
   return db
+end
+
+def require_login
+  if session[:id].nil?
+    redirect('/')
+  end
 end
 
 def last_attempt_time
@@ -99,6 +105,7 @@ post('/login') do
 end
 
 get('/konto') do
+  require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
   user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
@@ -112,7 +119,7 @@ get ('/logout') do
   redirect ('/')
 end
 
-get ('/annonser') do
+get('/annonser') do
   db = connect_to_db('db/todo.db')
   annonser = db.execute("SELECT * FROM annonser")
   annonser.each do |annon|
@@ -122,7 +129,7 @@ get ('/annonser') do
   slim(:"/annonser/index",locals:{annonser:annonser})
 end
 
-get ('/annonser/search') do
+get('/annonser/search')do
   query = params[:query]
   if query && !query.empty?
     db = connect_to_db('db/todo.db')
@@ -139,15 +146,21 @@ end
 
 get('/user/:id') do
   user_id = session[:id].to_i
+  db = connect_to_db('db/todo.db')
   id = params[:id].to_i
   session[:current_annons_id] = id
-  db = connect_to_db('db/todo.db')
+  user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
+
+  if user_annons_id.nil? || user_id != user_annons_id[0]
+    redirect('/')
+  end
+
   user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
   username = user_info["username"] if user_info
   result = db.execute("SELECT * FROM annonser WHERE id = ?",id).first
   annons_kommentarer = db.execute("SELECT * FROM annons_kommentarer WHERE annons_id = ?", id)
   kommentarer = []
-  annons_kommentarer.each do |row|
+  annons_kommentarer.each do |row| #Denna
     kommentar_id = row['kommentar_id']
     kommentar = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE kommentar_id = ?", kommentar_id).first
     kommentarer << kommentar if kommentar
@@ -156,6 +169,7 @@ get('/user/:id') do
 end
 
 get('/annonser/new') do
+  require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
   user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
@@ -246,6 +260,8 @@ post('/comment/:kommentar_id/delete') do
   redirect("/annons/#{annons_id}")
 end
 
+#Dessa ska fixas
+
 post('/annons/:id/delete') do
   id = params[:id].to_i
   db = SQLite3::Database.new("db/todo.db")
@@ -289,8 +305,16 @@ post('/user/:id/update') do
 end
 
 get('/user/:id/edit') do
+  user_id = session[:id].to_i
   id = params[:id].to_i
   db = connect_to_db('db/todo.db')
+  session[:current_annons_id] = id
+  user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
+
+  if user_annons_id.nil? || user_id != user_annons_id[0]
+    redirect('/')
+  end
+
   result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
   slim(:"/annonser/edit",locals:{result:result})
 end
