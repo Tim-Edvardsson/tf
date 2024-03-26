@@ -7,8 +7,9 @@ require 'sinatra/flash'
 
 #ER
 #Loggbok
-#Felhantering
-#Annonser får vara tomma och ingen tid
+#Yardoc
+#MVC
+#Innerjoin?
 #_______________________________________________________________________________________________________________________
 
 enable :sessions
@@ -73,6 +74,17 @@ def senaste_annons_expired?
   else
     return Time.now - session[:senaste_annons_time] > 5
   end
+end
+
+def delete_entity(id, redirect_path)
+  id = id.to_i
+  db = SQLite3::Database.new("db/todo.db")
+  kommentar_ids = db.execute("SELECT kommentar_id FROM kommentarer WHERE annons_id = ?", id).flatten
+  kommentar_ids.each do |kommentar_id|
+    db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
+  end
+  db.execute("DELETE FROM annonser WHERE id = ?", id)
+  redirect(redirect_path)
 end
 
 get('/') do
@@ -156,6 +168,12 @@ get ('/logout') do
   redirect('/')
 end
 
+# get('/annonser') do
+#   db = connect_to_db('db/todo.db')
+#   annonser = db.execute("SELECT annonser.*, users.username AS username FROM annonser INNER JOIN users ON annonser.user_id = users.id")
+#   slim(:"/annonser/index", locals: { annonser: annonser })
+# end
+
 get('/annonser') do
   #Denna visar alla annonser, där den loopar igenom allt från table annonser och den hämtar user info från annonsen med user_id som är sparat i annons table. Användarnamnet läggs sedan till i den aktuella annonsen under nyckeln "username".
   db = connect_to_db('db/todo.db')
@@ -183,32 +201,8 @@ get('/annonser/search')do
   end
 end
 
-get('/user/:id') do
-  user_id = session[:id].to_i
-  db = connect_to_db('db/todo.db')
-  id = params[:id].to_i
-  session[:current_annons_id] = id
-  user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
-
-  if user_annons_id.nil? || user_id != user_annons_id[0]
-    redirect('/')
-  end
-
-  user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
-  username = user_info["username"] if user_info
-  result = db.execute("SELECT * FROM annonser WHERE id = ?",id).first
-  annons_kommentarer = db.execute("SELECT * FROM annons_kommentarer WHERE annons_id = ?", id)
-  kommentarer = []
-  annons_kommentarer.each do |row| #Denna
-    kommentar_id = row['kommentar_id']
-    kommentar = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE kommentar_id = ?", kommentar_id).first
-    kommentarer << kommentar if kommentar
-  end
-  slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer })
-end
-
 get('/annonser/new') do
-  #Denna låter än skapa nya annonser
+  #Denna låter än skapa nya annonser. Den h'mtar också dit användarnamn
   require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
@@ -251,7 +245,8 @@ post('/annonser/new') do
   end
 end
 
-get('/annons/:id') do #Denna
+get('/user/:id') do
+  #Denna hämtar information om annonsen och dess kommentarer
   user_id = session[:id].to_i
   id = params[:id].to_i
   session[:current_annons_id] = id
@@ -259,20 +254,28 @@ get('/annons/:id') do #Denna
   result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
   user_info = db.execute("SELECT username FROM users WHERE id = ?", result['user_id']).first
   username = user_info["username"] if user_info
-  annons_kommentarer = db.execute("SELECT * FROM annons_kommentarer WHERE annons_id = ?", id)
-  kommentarer = []
-  annons_kommentarer.each do |row|
-    kommentar_id = row['kommentar_id']
-    kommentar = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE kommentar_id = ?", kommentar_id).first
-    kommentarer << kommentar if kommentar
-  end
+  kommentarer = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE annons_id = ?", id)
+  slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
+end
+
+get('/annons/:id') do
+  #Denna hämtar information om annonsen och dess kommentarer
+  user_id = session[:id].to_i
+  id = params[:id].to_i
+  session[:current_annons_id] = id
+  db = connect_to_db('db/todo.db')
+  result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
+  user_info = db.execute("SELECT username FROM users WHERE id = ?", result['user_id']).first
+  username = user_info["username"] if user_info
+  kommentarer = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE annons_id = ?", id)
   slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
 end
 
 post('/comment/new') do
+  #I denna kan man skapa nya kommentarer
   comment = params[:comment]
   user_id = session[:id].to_i
-  annons_id = session[:current_annons_id].to_i
+  annons_id = params[:annons_id].to_i
 
   if comment.nil? || comment.strip.empty?
     session[:error] = "Kommentaren får inte vara tom."
@@ -281,9 +284,7 @@ post('/comment/new') do
 
   if kolla_tiden
     db = SQLite3::Database.new("db/todo.db")
-    db.execute("INSERT INTO kommentarer (comment, user_id) VALUES (?, ?)", comment, user_id)
-    kommentar_id = db.last_insert_row_id
-    db.execute("INSERT INTO annons_kommentarer (annons_id, kommentar_id) VALUES (?, ?)", annons_id, kommentar_id)
+    db.execute("INSERT INTO kommentarer (comment, user_id, annons_id) VALUES (?, ?, ?)", comment, user_id, annons_id)
     updatera_tiden
     redirect("/annons/#{annons_id}")
   else
@@ -293,41 +294,23 @@ post('/comment/new') do
 end
 
 post('/comment/:kommentar_id/delete') do
+  #Denna gör så att man kan radera kommentarer.
   kommentar_id = params[:kommentar_id].to_i
   user_id = session[:id].to_i
   annons_id = session[:current_annons_id].to_i
   db = SQLite3::Database.new("db/todo.db")
-  db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?",kommentar_id)
-  db.execute("DELETE FROM annons_kommentarer WHERE kommentar_id = ?",kommentar_id)
+  db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
   redirect("/annons/#{annons_id}")
 end
 
-#Dessa ska fixas
-
 post('/annons/:id/delete') do
-  id = params[:id].to_i
-  db = SQLite3::Database.new("db/todo.db")
-  kommentar_ids = db.execute("SELECT kommentar_id FROM annons_kommentarer WHERE annons_id = ?", id).flatten
-  kommentar_ids.each do |kommentar_id|
-    db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?",kommentar_id)
-  end
-  db.execute("DELETE FROM annons_kommentarer WHERE annons_id = ?",id)
-  db.execute("DELETE FROM annonser WHERE id = ?",id)
-  redirect('/annonser')
+  #Denna kallar på en funktion som raderar kommentarer och annonsen
+  delete_entity(params[:id], '/annonser')
 end
 
-#Kan jag sätta ihop dessa?
-
 post('/user/:id/delete') do
-  id = params[:id].to_i
-  db = SQLite3::Database.new("db/todo.db")
-  kommentar_ids = db.execute("SELECT kommentar_id FROM annons_kommentarer WHERE annons_id = ?", id).flatten
-  kommentar_ids.each do |kommentar_id|
-    db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
-  end
-  db.execute("DELETE FROM annons_kommentarer WHERE annons_id = ?", id)
-  db.execute("DELETE FROM annonser WHERE id = ?",id)
-  redirect('/konto')
+  #Denna kallar på en funktion som raderar kommentarer och annonsen
+  delete_entity(params[:id], '/konto')
 end
 
 get('/user/:id/edit') do

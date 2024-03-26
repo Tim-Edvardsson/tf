@@ -1,3 +1,5 @@
+/*Denna annonsen man trycker på och där har vi bilden, säljaren och all information om annonser. Här kan man också kommentera i ett form samt läsa andras kommentarer. Här är också mycket om user, guest och admin om vem som ser ut på ett särkilt sätt och vad de kan göra
+
 article#visar_annonser
   - if result
     - if result['img']
@@ -15,9 +17,12 @@ article#visar_annonser
     - if session[:id]
       form#form action="/comment/new" method="POST" accept-charset="UTF-8"
         input#content type="text" name="comment" placeholder="Skriv din kommentar här"
+        input type="hidden" name="annons_id" value="#{result['id']}"
         input#submit_btn_1 type="submit" value="Kommentera"
     - if session[:error]
-      p#fel_meddelande= session.delete(:error)  
+      p#fel_meddelande= session.delete(:error)
+
+    /*Loopar igenom alla kommentarer och lägger till username. Skiljer också på admin, guest och user
   
     div#kommentarer_användare  
       - kommentarer.each do |kommentar|
