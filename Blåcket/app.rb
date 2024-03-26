@@ -15,16 +15,34 @@ require 'sinatra/flash'
 enable :sessions
 
 def connect_to_db(path)
+  #Bara en funktion för att snabbt kunna connecta till databasen
   db = SQLite3::Database.new(path)
   db.results_as_hash = true
   return db
 end
 
 def require_login
+  #Denna kollar om session id är tomt
   if session[:id].nil?
     redirect('/')
   end
 end
+
+def updatera_tiden
+  #Denna sätter tiden till det som är nu med time.now
+  session[:last_comment_time] = Time.now
+end
+
+def kolla_tiden
+  #Denna kolla om tiden är tom eller om det har gått längre än 3 sekunder
+  if session[:last_comment_time].nil?
+    return true
+  else
+    return Time.now - session[:last_comment_time] > 3
+  end
+end
+
+#Kolla dessa
 
 def last_attempt_time
   session[:last_attempt_time] ||= Time.now - 61
@@ -189,7 +207,7 @@ post('/annonser/new') do
   redirect('/konto')
 end
 
-get('/annons/:id') do
+get('/annons/:id') do #Denna
   user_id = session[:id].to_i
   id = params[:id].to_i
   session[:current_annons_id] = id
@@ -207,42 +225,22 @@ get('/annons/:id') do
   slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
 end
 
-def update_last_comment_time
-  # Uppdatera tiden för senaste kommentaren till aktuell tidpunkt
-  session[:last_comment_time] = Time.now
-end
-
-def last_comment_time_expired?
-  if session[:last_comment_time].nil?
-    return true
-  else
-    return Time.now - session[:last_comment_time] > 3
-  end
-end
-
-def last_comment_time_expired?
-  session[:last_comment_time] ||= Time.now - 6
-  return Time.now - session[:last_comment_time] > 3
-end
-
 post('/comment/new') do
   comment = params[:comment]
   user_id = session[:id].to_i
   annons_id = session[:current_annons_id].to_i
 
-  # Kontrollera om kommentaren är tom
   if comment.nil? || comment.strip.empty?
     session[:error] = "Kommentaren får inte vara tom."
     redirect("/annons/#{annons_id}")
   end
 
-  # Om kommentaren inte är tom och det inte har varit för snabbt sedan förra kommentaren
-  if last_comment_time_expired?
+  if kolla_tiden
     db = SQLite3::Database.new("db/todo.db")
     db.execute("INSERT INTO kommentarer (comment, user_id) VALUES (?, ?)", comment, user_id)
     kommentar_id = db.last_insert_row_id
     db.execute("INSERT INTO annons_kommentarer (annons_id, kommentar_id) VALUES (?, ?)", annons_id, kommentar_id)
-    update_last_comment_time
+    updatera_tiden
     redirect("/annons/#{annons_id}")
   else
     session[:error] = "Du kan inte lägga till en kommentar så snabbt efter din senaste kommentar."
@@ -289,6 +287,7 @@ post('/user/:id/delete') do
 end
 
 post('/user/:id/update') do
+  #Detta är en post för att uppdatera annonser från sitt konto
   id = params[:id].to_i
   content = params[:content]
   info = params[:info]
@@ -305,6 +304,7 @@ post('/user/:id/update') do
 end
 
 get('/user/:id/edit') do
+  #Detta är en get för att uppdatera annonser från sitt konto
   user_id = session[:id].to_i
   id = params[:id].to_i
   db = connect_to_db('db/todo.db')
