@@ -98,7 +98,19 @@ section form {
   margin-right: 10%;
 }
 
+#annons_spam_div p{
+  color: red;
+  background-color: aliceblue;
+  width: fit-content;
+  font-size: medium;
+}
+
+#felmeddelande2{
+  
+}
+
 #fel_meddelande{
+  margin-top: -5%;
   font-size: medium;
   width: fit-content;
   color: red;

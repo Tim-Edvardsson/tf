@@ -7,9 +7,8 @@ require 'sinatra/flash'
 
 #ER
 #Loggbok
-#För lång kräver javascript
 #Felhantering
-#Tid
+#Annonser får vara tomma och ingen tid
 #_______________________________________________________________________________________________________________________
 
 enable :sessions
@@ -42,25 +41,42 @@ def kolla_tiden
   end
 end
 
-#Kolla dessa
-
-def last_attempt_time
-  session[:last_attempt_time] ||= Time.now - 61
+def senaste_tiden
+  #Denna kollar tiden
+  session[:senaste_tiden] ||= Time.now - 61
 end
 
-def attempt_timeout_expired?
-  Time.now - last_attempt_time > 20
+def tiden_expired?
+  #Denna kollar om det gått mer än...
+  Time.now - senaste_tiden > 5
 end
 
-def last_attempt_time_reg
-  session[:last_attempt_time_reg] ||= Time.now - 61
+def senaste_reg
+  #Denna kollar tiden
+  session[:senaste_reg] ||= Time.now - 61
 end
 
-def reg_attempt_timeout_expired?
-  Time.now - last_attempt_time_reg > 20
+def reg_expired?
+  #Denna kollar om det gått mer än...
+  Time.now - senaste_reg > 5
+end
+
+def uppdatera_senaste_annons_time
+  #Denna uppdaterar din tid
+  session[:senaste_annons_time] = Time.now
+end
+
+def senaste_annons_expired?
+  #Denna kollar om det har gått tillräckligt lång tid
+  if session[:senaste_annons_time].nil?
+    return true
+  else
+    return Time.now - session[:senaste_annons_time] > 5
+  end
 end
 
 get('/') do
+  #Denna kollar om någon är inloggad eller om de ska till start sidan
   if session[:id]
     redirect('/konto')
   else
@@ -69,8 +85,9 @@ get('/') do
 end
 
 post('/users/new') do
-  if reg_attempt_timeout_expired?
-    session[:last_attempt_time_reg] = Time.now
+  #Denna kollar om det gått tilräckligt lång tid innan den skapar en ny med reg form. Den har också felhantering med om det redan finns en user med det namnet, fel lösen eller om username är tomt
+  if reg_expired?
+    session[:senaste_reg] = Time.now
   else
     session[:error] = "För snabbt! Försök igen om en stund."
     redirect('/')
@@ -97,32 +114,33 @@ post('/users/new') do
 end
 
 get('/login') do
+  #Denna skickar dig till login sidan
     slim(:login)
 end
 
 post('/login') do
-  if attempt_timeout_expired?
-    session[:last_attempt_time] = Time.now
+  #Denna kolla om tiden har expired. Sedan tar den din input och loggar in dig. Den har också felhantering. Den skickar dig till ditt konto om rätt annars felmeddelande
+  if tiden_expired?
+    session[:senaste_tiden] = Time.now
   else
     session[:error] = "För snabbt! Försök igen om en stund."
     redirect('/login')
   end
-
   username = params[:username]
   password = params[:password]
   db = connect_to_db('db/todo.db')
   result = db.execute("SELECT * FROM users WHERE username = ?", username).first
   pwdigest = result["pwdigest"] if result
-
   if result && BCrypt::Password.new(pwdigest) == password
     session[:id] = result["id"]
-    redirect '/konto'
+    redirect ('/konto')
   else
-    slim :login, locals: { error: "Fel användarnamn eller lösenord" }
+    slim(:login,locals:{error: "Fel användarnamn eller lösenord"})
   end
 end
 
 get('/konto') do
+  #Denna kolla om någon faktiskt är inloggad, den visar ditt konto med information och annat. Den skriver bara namnet om det finns ett
   require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
@@ -133,11 +151,13 @@ get('/konto') do
 end
 
 get ('/logout') do
+  #Denna rensar session om du loggar ut
   session.clear
-  redirect ('/')
+  redirect('/')
 end
 
 get('/annonser') do
+  #Denna visar alla annonser, där den loopar igenom allt från table annonser och den hämtar user info från annonsen med user_id som är sparat i annons table. Användarnamnet läggs sedan till i den aktuella annonsen under nyckeln "username".
   db = connect_to_db('db/todo.db')
   annonser = db.execute("SELECT * FROM annonser")
   annonser.each do |annon|
@@ -148,6 +168,7 @@ get('/annonser') do
 end
 
 get('/annonser/search')do
+  #Här kan man söka efter annonser där den kollar efter det som är likt från search form query. Den sorterar de och sedan hämtar den alla username igen
   query = params[:query]
   if query && !query.empty?
     db = connect_to_db('db/todo.db')
@@ -187,6 +208,7 @@ get('/user/:id') do
 end
 
 get('/annonser/new') do
+  #Denna låter än skapa nya annonser
   require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
@@ -196,15 +218,37 @@ get('/annonser/new') do
 end
 
 post('/annonser/new') do
+  # Här skickar den din data för att skapa nya annonser. Den kollar också tiden mellan annonserna samt ifall något är tomt
   content = params[:content]
   info = params[:info]
   pris = params[:pris]
-  genre = params[:genre]
-  user_id = session[:id].to_i
   img = params[:img][:tempfile].read if params[:img]
-  db = SQLite3::Database.new("db/todo.db")
-  db.execute("INSERT INTO annonser (content, genre, user_id, pris, info, img) VALUES (?,?,?,?,?,?)",content, genre, user_id, pris, info, img)
-  redirect('/konto')
+
+  if content.nil? || content.strip.empty?
+    session[:error] = "Titeln på din vara får inte vara tomt."
+    redirect('/konto')
+  elsif info.nil? || info.strip.empty?
+    session[:error] = "Information om din vara får inte vara tomt."
+    redirect('/konto')
+  elsif pris.nil? || pris.strip.empty?
+    session[:error] = "Priset på din vara får inte vara tomt."
+    redirect('/konto')
+  elsif img.nil? || img.strip.empty?
+    session[:error] = "Du måste ha en bild"
+    redirect('/konto')
+  end
+
+  if senaste_annons_expired?
+    genre = params[:genre]
+    session[:senaste_annons_time] = Time.now
+    user_id = session[:id].to_i
+    db = SQLite3::Database.new("db/todo.db")
+    db.execute("INSERT INTO annonser (content, genre, user_id, pris, info, img) VALUES (?,?,?,?,?,?)",content, genre, user_id, pris, info, img)
+    redirect('/konto')
+  else
+    session[:error] = "För snabbt! Försök igen om en stund."
+    redirect('/konto')
+  end
 end
 
 get('/annons/:id') do #Denna
@@ -286,23 +330,6 @@ post('/user/:id/delete') do
   redirect('/konto')
 end
 
-post('/user/:id/update') do
-  #Detta är en post för att uppdatera annonser från sitt konto
-  id = params[:id].to_i
-  content = params[:content]
-  info = params[:info]
-  pris = params[:pris].to_i
-  genre = params[:genre]
-  db = SQLite3::Database.new("db/todo.db")
-  if params[:img]
-    img = params[:img][:tempfile].read
-    db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, img=? WHERE id = ?", content, genre, pris, info, img, id)
-  else
-    db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=? WHERE id = ?", content, genre, pris, info, id)
-  end
-  redirect('/konto')
-end
-
 get('/user/:id/edit') do
   #Detta är en get för att uppdatera annonser från sitt konto
   user_id = session[:id].to_i
@@ -317,4 +344,33 @@ get('/user/:id/edit') do
 
   result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
   slim(:"/annonser/edit",locals:{result:result})
+end
+
+post('/user/:id/update') do
+  #Detta är en post för att uppdatera annonser från sitt konto. Här får inget heller vara tomt
+  id = params[:id].to_i
+  content = params[:content]
+  info = params[:info]
+  pris = params[:pris].to_i
+  genre = params[:genre]
+
+  if content.nil? || content.strip.empty?
+    session[:error] = "Titeln på din vara får inte vara tomt."
+    redirect('/konto')
+  elsif info.nil? || info.strip.empty?
+    session[:error] = "Information om din vara får inte vara tomt."
+    redirect('/konto')
+  elsif pris.nil? || pris.zero?
+    session[:error] = "Priset på din vara får inte vara tomt."
+    redirect('/konto')
+  end
+
+  db = SQLite3::Database.new("db/todo.db")
+  if params[:img]
+    img = params[:img][:tempfile].read
+    db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, img=? WHERE id = ?", content, genre, pris, info, img, id)
+  else
+    db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=? WHERE id = ?", content, genre, pris, info, id)
+  end
+  redirect('/konto')
 end

@@ -4,7 +4,14 @@ div#dina_annonser_div
     p#undertext_ditt_konto Här kan du ändra, radera och lägga till annonser
 
     a#add_new href="/annonser/new" Lägg till nya annonser
-    p
+
+    div#annons_spam_div
+
+        - if session[:error]
+            p#fel_meddelande2= session.delete(:error)
+
+        - if session[:error]
+            p#fel_meddelande2= session[:error] 
 
     label.label for="genre-select" Sortera efter genre:
     select#genre-select
