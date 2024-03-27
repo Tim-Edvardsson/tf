@@ -1,25 +1,36 @@
-h1#ditt_konto_header Hej #{username}, detta är ditt konto och dina annonser
-p#undertext_ditt_konto Här kan du ändra, radera och lägga till annonser
+/*Denna visar ditt konto sidan där du kan se dina annonser, skapa nya, få felmeddelanden, kanske filtrera de. Man kan trycka på sina annonser, redigera de och radera de
 
-a#add_new href="/annonser/new" Lägg till nya annonser
-p
+div#dina_annonser_div
 
-label.label for="genre-select" Sortera efter genre:
-select#genre-select
-    option(value="Alla") Alla
-    option(value="Fordon") Fordon
-    option(value="Boende") Boende
-    option(value="Elektronik") Elektronik
-    option(value="Annat") Annat
+    h1#ditt_konto_header Hej #{username}, detta är ditt konto och dina annonser
+    p#undertext_ditt_konto Här kan du ändra, radera och lägga till annonser
 
-section#section_dina_annonser
-    h1 Här är dina annonser
+    a#add_new href="/annonser/new" Lägg till nya annonser
 
-    div#dina_annonser_container
-        - user.each do |use|
-            div#anons_element data-genre=use['genre']
-                li
-                    a#annons_knapp href="user/#{use['id']}" #{use["content"]} 
-                    a#uppdatera_knapp href="user/#{use['id']}/edit" Uppdatera din annons
-                    form method="POST" action="user/#{use['id']}/delete"
-                        input type="submit" value="Delete"
+    div#annons_spam_div
+
+        - if session[:error]
+            p#fel_meddelande2= session.delete(:error)
+
+        - if session[:error]
+            p#fel_meddelande2= session[:error] 
+
+    / label.label for="genre-select" Sortera efter genre:
+    / select#genre-select
+    /     option(value="Alla") Alla
+    /     option(value="Fordon") Fordon
+    /     option(value="Boende") Boende
+    /     option(value="Elektronik") Elektronik
+    /     option(value="Annat") Annat
+
+    section#section_dina_annonser
+        h1 Här är dina annonser
+
+        div#dina_annonser_container
+            - user.each do |use|
+                div.anons-element data-genre=use['genre']
+                    li
+                        a#annons_knapp href="user/#{use['id']}" #{use["content"]} 
+                        a#uppdatera_knapp href="user/#{use['id']}/edit" Uppdatera din annons
+                        form method="POST" action="user/#{use['id']}/delete"
+                            input type="submit" value="Delete"

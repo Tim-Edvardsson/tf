@@ -2,7 +2,7 @@
   padding: 0;
 }
 
-body {
+body{
   height: 110%;
   display: flex;
   align-items: center;
@@ -11,40 +11,45 @@ body {
   background-color: lightblue;
 }
 
-nav {
+nav{
   background-color: aliceblue;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  width: 80%;
+  min-width: 80%;
   font-family: Arial, Helvetica, sans-serif;
   text-transform: uppercase;
   text-decoration:none;
   font-size: 1.2em;
   font-weight:800;
   border-style: solid;
-  height: 10vh;
   display:flex;
   justify-content:space-around;
   align-items:center;
+  height: auto;
+  width: auto;
 }
 
 /* #header_login{
   display: none;
 } */
 
-#form_login{
-  height: 56.7px;
-}
-
 nav a h1 {
   font-size: 2.5em;
-  color:rgb(0, 87, 87);
+  color: rgb(0, 87, 87);
   border-radius: 10px;
   border: 2px solid black;
-  width: fit-content;
+  width: 100%;
   padding: 5%;
+  max-height: 100%;
+  max-width: 100%;
+  word-break: break-all;
+  white-space:inherit;
+}
+
+#form_login{
+  height: 56.7px;
 }
 
 #header_link{
@@ -53,6 +58,11 @@ nav a h1 {
 
 nav a {
   color:rgb(60, 71, 114);
+  word-break:break-all;
+}
+
+form #search_form{
+  height: 1px;
 }
 
 section {
@@ -63,22 +73,44 @@ section {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 40vh;
-  width: 40vh;
+  height: auto;
+  min-height: 40vh;
+  min-width: 30vw;
+  width: auto;
   border-radius: 30px;
   border: 2px solid black;
   margin: 5%;
+  overflow: hidden;
 }
 
-section form{
+section form {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content:space-between;
-  height: 10vh;
+  justify-content: space-between;
+  margin-bottom: 10%;
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+section form {
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+#annons_spam_div p{
+  color: red;
+  background-color: aliceblue;
+  width: fit-content;
+  font-size: medium;
+}
+
+#felmeddelande2{
+  
 }
 
 #fel_meddelande{
+  margin-top: -5%;
   font-size: medium;
   width: fit-content;
   color: red;
@@ -97,6 +129,11 @@ section form{
   align-items: center;
   width: 45vw;
   height: fit-content;
+  
+}
+
+#section_alla_annonser form{
+  margin-bottom: 0%;
 }
 
 .hidden {
@@ -142,7 +179,7 @@ section form{
 }
 
 #username1 {
-  color: rgb(0, 119, 255); /* Ange den önskade färgen här */
+  color: rgb(0, 119, 255);
   text-decoration: none;
 }
 
@@ -234,20 +271,27 @@ section form{
   margin-bottom: 0px;
 }
 
+#dina_annonser_div{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 #section_dina_annonser{
   margin: 2%;
   display: flex;
   width: 45vw;
   align-items: center;
   height: fit-content;
-  word-break:break-all;
+  word-break:break-word;
 }
 
 #dina_annonser_container{
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
-  justify-content: center ;
+  justify-content: center;
   height: fit-content;
   width: fit-content;
 }

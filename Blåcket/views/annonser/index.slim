@@ -1,3 +1,5 @@
+/*Här visas alla annonser och man kan söka samt filtrera med genre. Här finns tagen som js kallar på när den filtrerar. Span och sånt var bara för att få rätt håll på den. Den som är mod kan också radera annonser 
+
 section#section_alla_annonser
 
   h1 Alla annonser
@@ -5,13 +7,13 @@ section#section_alla_annonser
   form#search_form action="/annonser/search" method="GET"
     Input type="text" name="query" placeholder="Sök bland annonser"
 
-    label for="genre-select" Sortera efter genre:
-    select#genre-select
-      option(value="Alla") Alla
-      option(value="Fordon") Fordon
-      option(value="Boende") Boende
-      option(value="Elektronik") Elektronik
-      option(value="Annat") Annat
+    / label for="genre-select" Sortera efter genre:
+    / select#genre-select
+    /   option(value="Alla") Alla
+    /   option(value="Fordon") Fordon
+    /   option(value="Boende") Boende
+    /   option(value="Elektronik") Elektronik
+    /   option(value="Annat") Annat
 
   ol#annonser_lista
     - index = annonser.length

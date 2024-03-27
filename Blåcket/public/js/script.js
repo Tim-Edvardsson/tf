@@ -1,18 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const genreSelect = document.getElementById('genre-select');
-  const annonser = document.querySelectorAll('.anons-element');
+//Den hämtar element, genre-select och annons-element. Lyssnar på händelse / vi väljer genre. Loppar igenom de som har det och ändrar block och none
 
-  genreSelect.addEventListener('change', function() {
-    const selectedGenre = genreSelect.value;
+// document.addEventListener('DOMContentLoaded', function() {
+//   const genreSelect = document.getElementById('genre-select');
+//   const annonser = document.querySelectorAll('.anons-element');
 
-    annonser.forEach(function(annon) {
-      const genre = annon.dataset.genre;
+//   genreSelect.addEventListener('change', function() {
+//     const selectedGenre = genreSelect.value;
 
-      if (selectedGenre === 'Alla' || genre === selectedGenre) {
-        annon.style.display = 'block';
-      } else {
-        annon.style.display = 'none';
-      }
-    });
-  });
-});
+//     annonser.forEach(function(annon) {
+//       const genre = annon.dataset.genre;
+
+//       if (selectedGenre === 'Alla' || genre === selectedGenre) {
+//         annon.style.display = 'block';
+//       } else {
+//         annon.style.display = 'none';
+//       }
+//     });
+//   });
+// });
