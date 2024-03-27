@@ -5,12 +5,13 @@ require 'bcrypt'
 require 'sinatra/reloader'
 #require 'sinatra/flash'
 
-#Jani
+#Jani1
 #ER
 #Loggbok
 #Yardoc
 #MVC
 #Innerjoin?
+#Relationstabell
 #_______________________________________________________________________________________________________________________
 
 enable :sessions
@@ -200,24 +201,6 @@ get('/annonser/search')do
   else
     redirect('/annonser')
   end
-end
-
-get('/user/:id') do
-  user_id = session[:id].to_i
-  id = params[:id].to_i
-  session[:current_annons_id] = id
-  db = connect_to_db('db/todo.db')
-  user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
-  username = user_info["username"] if user_info
-  result = db.execute("SELECT * FROM annonser WHERE id = ?",id).first
-  annons_kommentarer = db.execute("SELECT * FROM annons_kommentarer WHERE annons_id = ?", id)
-  kommentarer = []
-  annons_kommentarer.each do |row|
-    kommentar_id = row['kommentar_id']
-    kommentar = db.execute("SELECT kommentarer.*, users.username AS kommentar_username FROM kommentarer JOIN users ON kommentarer.user_id = users.id WHERE kommentar_id = ?", kommentar_id).first
-    kommentarer << kommentar if kommentar
-  end
-  slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
 end
 
 get('/annonser/new') do
