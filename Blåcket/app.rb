@@ -252,6 +252,12 @@ get('/user/:id') do
   id = params[:id].to_i
   session[:current_annons_id] = id
   db = connect_to_db('db/todo.db')
+  user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
+
+  if user_annons_id.nil? || user_id != user_annons_id[0]
+    redirect('/')
+  end
+
   result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
   user_info = db.execute("SELECT username FROM users WHERE id = ?", result['user_id']).first
   username = user_info["username"] if user_info
