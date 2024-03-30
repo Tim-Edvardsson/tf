@@ -177,40 +177,58 @@ end
 # end
 
 get('/annonser') do
-  #Denna visar alla annonser, där den loopar igenom allt från table annonser och den hämtar user info från annonsen med user_id som är sparat i annons table. Användarnamnet läggs sedan till i den aktuella annonsen under nyckeln "username".
   db = connect_to_db('db/todo.db')
   annonser = db.execute("SELECT * FROM annonser")
-  annonser.each do |annon|
-    user_info = db.execute("SELECT username FROM users WHERE id = ?",annon['user_id']).first
-    annon['username'] = user_info["username"] if user_info
+  genres = db.execute("SELECT * FROM genre")
+  annonser.each do |annons|
+    user_info = db.execute("SELECT username FROM users WHERE id = ?", annons['user_id']).first
+    annons['username'] = user_info["username"] if user_info
   end
-  slim(:"/annonser/index",locals:{annonser:annonser})
+  slim(:"/annonser/index", locals: { annonser: annonser, genres: genres })
 end
 
-get('/annonser/search')do
-  #Här kan man söka efter annonser där den kollar efter det som är likt från search form query. Den sorterar de och sedan hämtar den alla username igen
-  query = params[:query]
-  if query && !query.empty?
-    db = connect_to_db('db/todo.db')
-    annonser = db.execute("SELECT * FROM annonser WHERE content LIKE ?", "%#{query}%")
-    annonser.each do |annon|
-      user_info = db.execute("SELECT username FROM users WHERE id = ?", annon['user_id']).first
-      annon['username'] = user_info["username"] if user_info
-    end
-    slim(:"/annonser/index",locals:{annonser:annonser})
+post('/annonser/filter') do
+  db = connect_to_db('db/todo.db')
+  vald_genre = params[:genre]
+  if vald_genre == "Alla"
+    annonser = db.execute("SELECT * FROM annonser")
   else
-    redirect('/annonser')
+    genre_id = db.execute("SELECT id FROM genre WHERE name = ?", vald_genre).first['id']
+    annonser = db.execute("SELECT * FROM annonser WHERE id IN (SELECT annons_id FROM genre_annonser WHERE genre_id = ? OR genre_id2 = ?)", genre_id, genre_id)
   end
+  genres = db.execute("SELECT * FROM genre")
+  annonser.each do |annons|
+    user_info = db.execute("SELECT username FROM users WHERE id = ?", annons['user_id']).first
+    annons['username'] = user_info["username"] if user_info
+  end
+  slim(:"/annonser/index", locals: { annonser: annonser, genres: genres })
 end
+
+# get('/annonser/search')do
+#   #Här kan man söka efter annonser där den kollar efter det som är likt från search form query. Den sorterar de och sedan hämtar den alla username igen
+#   query = params[:query]
+#   if query && !query.empty?
+#     db = connect_to_db('db/todo.db')
+#     annonser = db.execute("SELECT * FROM annonser WHERE content LIKE ?", "%#{query}%")
+#     annonser.each do |annon|
+#       user_info = db.execute("SELECT username FROM users WHERE id = ?", annon['user_id']).first
+#       annon['username'] = user_info["username"] if user_info
+#     end
+#     slim(:"/annonser/index",locals:{annonser:annonser})
+#   else
+#     redirect('/annonser')
+#   end
+# end
 
 get('/annonser/new') do
   #Denna låter än skapa nya annonser. Den h'mtar också dit användarnamn
   require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
+  genres = db.execute("SELECT * FROM genre")
   user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
   username = user_info["username"] if user_info
-  slim(:"/annonser/new",locals:{username:username})
+  slim(:"/annonser/new",locals:{username:username,genres:genres})
 end
 
 post('/annonser/new') do
@@ -235,11 +253,16 @@ post('/annonser/new') do
   end
 
   if senaste_annons_expired?
-    genre = params[:genre]
+    genre_name = params[:genre]
+    genre_name2 = params[:genre2]
     session[:senaste_annons_time] = Time.now
     user_id = session[:id].to_i
     db = SQLite3::Database.new("db/todo.db")
-    db.execute("INSERT INTO annonser (content, genre, user_id, pris, info, img) VALUES (?,?,?,?,?,?)",content, genre, user_id, pris, info, img)
+    db.execute("INSERT INTO annonser (content, genre, user_id, pris, info, img, genre2) VALUES (?,?,?,?,?,?,?)", content, genre_name, user_id, pris, info, img, genre_name2)
+    annons_id = db.last_insert_row_id
+    genre_id_result = db.execute("SELECT id FROM genre WHERE name = ?", genre_name).first
+    genre_id_result2 = db.execute("SELECT id FROM genre WHERE name = ?", genre_name2).first
+    db.execute("INSERT INTO genre_annonser (genre_id, genre_id2, annons_id) VALUES (?, ?, ?)", genre_id_result, genre_id_result2, annons_id)
     redirect('/konto')
   else
     session[:error] = "För snabbt! Försök igen om en stund."
