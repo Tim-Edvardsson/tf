@@ -5,7 +5,7 @@ require 'bcrypt'
 require 'sinatra/reloader'
 #require 'sinatra/flash'
 
-#Jani1
+#Jani5
 #ER
 #Loggbok
 #Yardoc
