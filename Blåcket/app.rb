@@ -3,7 +3,7 @@ require 'slim'
 require 'sqlite3'
 require 'bcrypt'
 require 'sinatra/reloader'
-#require 'sinatra/flash'
+require_relative './model.rb'
 
 #Jani5
 #ER
@@ -95,6 +95,10 @@ get('/') do
     slim(:start)
   end
 end
+
+username = params[:username]
+password = params[:password]
+password_confirm = params[:password_confirm]
 
 post('/users/new') do
   #Denna kollar om det gått tilräckligt lång tid innan den skapar en ny med reg form. Den har också felhantering med om det redan finns en user med det namnet, fel lösen eller om username är tomt
