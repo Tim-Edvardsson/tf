@@ -15,16 +15,11 @@ div#dina_annonser_div
         - if session[:error]
             p#fel_meddelande2= session[:error] 
 
-    / label.label for="genre-select" Sortera efter genre:
-    / select#genre-select
-    /     option(value="Alla") Alla
-    /     option(value="Fordon") Fordon
-    /     option(value="Boende") Boende
-    /     option(value="Elektronik") Elektronik
-    /     option(value="Annat") Annat
+    form#search_form_search(action="/konto" method="GET")
+         Input#search_form_search_input(type="text" name="query" placeholder="Sök bland annonser")  
 
     section#section_dina_annonser
-        h1 Här är dina annonser
+        h1 Här är dina annonser 
 
         div#dina_annonser_container
             - user.each do |use|

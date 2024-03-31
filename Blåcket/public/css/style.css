@@ -98,6 +98,10 @@ section form {
   margin-right: 10%;
 }
 
+#search_form_search_input{
+  margin-top: 2%;
+}
+
 #annons_spam_div p{
   color: red;
   background-color: aliceblue;

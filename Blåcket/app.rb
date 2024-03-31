@@ -125,18 +125,18 @@ post('/users/new') do
   end
 end
 
-get('/login') do
+get('/users/login') do
   #Denna skickar dig till login sidan
-    slim(:login)
+    slim(:"users/login")
 end
 
-post('/login') do
+post('/users/login') do
   #Denna kolla om tiden har expired. Sedan tar den din input och loggar in dig. Den har också felhantering. Den skickar dig till ditt konto om rätt annars felmeddelande
   if tiden_expired?
     session[:senaste_tiden] = Time.now
   else
     session[:error] = "För snabbt! Försök igen om en stund."
-    redirect('/login')
+    redirect('/users/login')
   end
   username = params[:username]
   password = params[:password]
@@ -147,19 +147,22 @@ post('/login') do
     session[:id] = result["id"]
     redirect ('/konto')
   else
-    slim(:login,locals:{error: "Fel användarnamn eller lösenord"})
+    slim(:"/users/login",locals:{error: "Fel användarnamn eller lösenord"})
   end
 end
 
 get('/konto') do
-  #Denna kolla om någon faktiskt är inloggad, den visar ditt konto med information och annat. Den skriver bara namnet om det finns ett
   require_login
   user_id = session[:id].to_i
   db = connect_to_db('db/todo.db')
   user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
   username = user_info["username"] if user_info
   result = db.execute("SELECT * FROM annonser WHERE user_id = ?", user_id)
-  slim(:"users/index", locals: {user:result,username:username})
+  query = params[:query]
+  if query && !query.empty?
+    result = result.select { |annons| annons['content'].include?(query) }
+  end
+  slim(:"users/index",locals:{user:result,username:username})
 end
 
 get ('/logout') do
@@ -167,12 +170,6 @@ get ('/logout') do
   session.clear
   redirect('/')
 end
-
-# get('/annonser') do
-#   db = connect_to_db('db/todo.db')
-#   annonser = db.execute("SELECT annonser.*, users.username AS username FROM annonser INNER JOIN users ON annonser.user_id = users.id")
-#   slim(:"/annonser/index", locals: { annonser: annonser })
-# end
 
 get('/annonser') do
   db = connect_to_db('db/todo.db')
@@ -187,7 +184,6 @@ end
 
 post('/annonser/filter') do
   db = connect_to_db('db/todo.db')
-
   vald_genre = params[:genre]
   if vald_genre == "Alla"
     annonser = db.execute("SELECT * FROM annonser")
