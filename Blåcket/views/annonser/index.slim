@@ -3,16 +3,15 @@
 section#section_alla_annonser
   h1 Alla annonser
 
-  form#search_form(action="/annonser/search" method="GET")
+  form#search_form_search(action="/annonser/search" method="GET")
     input(type="text" name="query" placeholder="Sök bland annonser")
 
-  form#search_form action="/annonser/filter" method="POST"
+  form#search_form_filter (action="/annonser/filter" method="POST")
     label for="genre-select" Sortera efter genre:
     select#genre-select name="genre"
       option(value="Alla") Alla
-      - genres.each do |genre|
+      - genres.reject { |genre| genre['id'] == 5 }.each do |genre|
         option(value=genre['name'])= genre['name']
-
     input#filter_btn type="submit" value="Filtrera"
 
   ol#annonser_lista

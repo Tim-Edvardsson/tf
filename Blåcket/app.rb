@@ -6,7 +6,6 @@ require 'sinatra/reloader'
 #require 'sinatra/flash'
 
 #Jani5
-#Search
 #ER
 #Loggbok
 #Yardoc
@@ -188,6 +187,7 @@ end
 
 post('/annonser/filter') do
   db = connect_to_db('db/todo.db')
+
   vald_genre = params[:genre]
   if vald_genre == "Alla"
     annonser = db.execute("SELECT * FROM annonser")
@@ -203,21 +203,22 @@ post('/annonser/filter') do
   slim(:"/annonser/index", locals: { annonser: annonser, genres: genres })
 end
 
-# get('/annonser/search')do
-#   #Här kan man söka efter annonser där den kollar efter det som är likt från search form query. Den sorterar de och sedan hämtar den alla username igen
-#   query = params[:query]
-#   if query && !query.empty?
-#     db = connect_to_db('db/todo.db')
-#     annonser = db.execute("SELECT * FROM annonser WHERE content LIKE ?", "%#{query}%")
-#     annonser.each do |annon|
-#       user_info = db.execute("SELECT username FROM users WHERE id = ?", annon['user_id']).first
-#       annon['username'] = user_info["username"] if user_info
-#     end
-#     slim(:"/annonser/index",locals:{annonser:annonser})
-#   else
-#     redirect('/annonser')
-#   end
-# end
+get('/annonser/search') do
+  query = params[:query]
+  if query && !query.empty?
+    db = connect_to_db('db/todo.db')
+    genres = db.execute("SELECT * FROM genre")
+    db.results_as_hash = true # Ange att resultatet ska returneras som hash för att hantera teckenkodning
+    annonser = db.execute("SELECT * FROM annonser WHERE content LIKE ?", "%#{query}%")
+    annonser.each do |annon|
+      user_info = db.execute("SELECT username FROM users WHERE id = ?", annon['user_id']).first
+      annon['username'] = user_info["username"] if user_info
+    end
+    slim(:"/annonser/index", locals: { annonser: annonser, genres: genres  })
+  else
+    redirect('/annonser')
+  end
+end
 
 get('/annonser/new') do
   #Denna låter än skapa nya annonser. Den h'mtar också dit användarnamn
