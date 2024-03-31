@@ -6,12 +6,11 @@ require 'sinatra/reloader'
 #require 'sinatra/flash'
 
 #Jani5
+#Search
 #ER
 #Loggbok
 #Yardoc
 #MVC
-#Innerjoin?
-#Relationstabell
 #_______________________________________________________________________________________________________________________
 
 enable :sessions
