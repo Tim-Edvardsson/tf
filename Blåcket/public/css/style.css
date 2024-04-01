@@ -109,8 +109,11 @@ section form {
   font-size: medium;
 }
 
-#felmeddelande2{
-  
+#fel_meddelande_2{
+  font-size: medium;
+  width: fit-content;
+  color: red;
+  background-color: aliceblue;
 }
 
 #fel_meddelande{

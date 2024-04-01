@@ -20,7 +20,7 @@ article#visar_annonser
         input type="hidden" name="annons_id" value="#{result['id']}"
         input#submit_btn_1 type="submit" value="Kommentera"
     - if session[:error]
-      p#fel_meddelande= session.delete(:error)
+      p#fel_meddelande_2= session.delete(:error)
 
     /*Loopar igenom alla kommentarer och lägger till username. Skiljer också på admin, guest och user
   
