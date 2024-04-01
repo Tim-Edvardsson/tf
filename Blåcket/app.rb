@@ -15,6 +15,8 @@ require_relative './model.rb'
 
 enable :sessions
 
+include Model
+
 #Tror dessa är authorization
 def connect_to_db(path)
   #Bara en funktion för att snabbt kunna connecta till databasen
