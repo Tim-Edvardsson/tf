@@ -1,64 +1,9 @@
-def connect_to_db(path)
-  #Bara en funktion för att snabbt kunna connecta till databasen
-  db = SQLite3::Database.new(path)
-  db.results_as_hash = true
-  return db
-end
-
-def require_login
-  #Denna kollar om session id är tomt
-  if session[:id].nil?
-    redirect('/')
-  end
-end
-
-def updatera_tiden
-  #Denna sätter tiden till det som är nu med time.now
-  session[:last_comment_time] = Time.now
-end
-
-def kolla_tiden
-  #Denna kolla om tiden är tom eller om det har gått längre än 3 sekunder
-  if session[:last_comment_time].nil?
-    return true
-  else
-    return Time.now - session[:last_comment_time] > 3
-  end
-end
-
-def senaste_tiden
-  #Denna kollar tiden
-  session[:senaste_tiden] ||= Time.now - 61
-end
-
-def tiden_expired?
-  #Denna kollar om det gått mer än...
-  Time.now - senaste_tiden > 5
-end
-
-def senaste_reg
-  #Denna kollar tiden
-  session[:senaste_reg] ||= Time.now - 61
-end
-
-def reg_expired?
-  #Denna kollar om det gått mer än...
-  Time.now - senaste_reg > 5
-end
-
-def uppdatera_senaste_annons_time
-  #Denna uppdaterar din tid
-  session[:senaste_annons_time] = Time.now
-end
-
-def senaste_annons_expired?
-  #Denna kollar om det har gått tillräckligt lång tid
-  if session[:senaste_annons_time].nil?
-    return true
-  else
-    return Time.now - session[:senaste_annons_time] > 5
-  end
-end
+require 'sinatra'
+require 'slim'
+require 'sqlite3'
+require 'bcrypt'
+require 'sinatra/reloader'
+require_relative './model.rb'
 
 def delete_entity(id, redirect_path)
   id = id.to_i
@@ -71,7 +16,7 @@ def delete_entity(id, redirect_path)
   redirect(redirect_path)
 end
 
-def register_user(username, password, password_digest)
+def register_user(username, password, password_confirm)
   if reg_expired?
     session[:senaste_reg] = Time.now
   else
@@ -179,6 +124,7 @@ def annonser_new(user_id)
 end
 
 def annonser_new_post(content, info, pris, img, genre_name, genre_name2, user_id)
+
   if content.nil? || content.strip.empty?
     session[:error] = "Titeln på din vara får inte vara tomt."
     redirect('/konto')
@@ -200,7 +146,7 @@ def annonser_new_post(content, info, pris, img, genre_name, genre_name2, user_id
     annons_id = db.last_insert_row_id
     genre_id_result = db.execute("SELECT id FROM genre WHERE name = ?", genre_name).first
     genre_id_result2 = db.execute("SELECT id FROM genre WHERE name = ?", genre_name2).first
-    db.execute("INSERT INTO genre_annonser (genre_id, genre_id2, annons_id) VALUES (?, ?, ?)", genre_id_result, genre_id_result2, annons_id)
+    db.execute("INSERT INTO genre_annonser (genre_id, genre_id2, annons_id) VALUES (?, ?, ?)", genre_id_result[0], genre_id_result2[0], annons_id)
     redirect('/konto')
   else
     session[:error] = "För snabbt! Försök igen om en stund."
@@ -212,11 +158,7 @@ def user_id(user_id, id)
   session[:current_annons_id] = id
   db = connect_to_db('db/todo.db')
   user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
-
-  if user_annons_id.nil? || user_id != user_annons_id[0]
-    redirect('/')
-  end
-
+  user_annons_id(user_annons_id, user_id)
   result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
   user_info = db.execute("SELECT username FROM users WHERE id = ?", result['user_id']).first
   username = user_info["username"] if user_info
@@ -261,14 +203,13 @@ def user_edit(user_id, id)
   db = connect_to_db('db/todo.db')
   session[:current_annons_id] = id
   user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
-  if user_annons_id.nil? || user_id != user_annons_id[0]
-    redirect('/')
-  end
+  user_annons_id(user_annons_id, user_id)
   result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
   slim(:"/annonser/edit",locals:{result:result})
 end
 
 def user_update(id, content, info, pris, genre)
+
   if content.nil? || content.strip.empty?
     session[:error] = "Titeln på din vara får inte vara tomt."
     redirect('/konto')
@@ -279,6 +220,7 @@ def user_update(id, content, info, pris, genre)
     session[:error] = "Priset på din vara får inte vara tomt."
     redirect('/konto')
   end
+
   db = SQLite3::Database.new("db/todo.db")
   if params[:img]
     img = params[:img][:tempfile].read

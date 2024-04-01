@@ -10,11 +10,80 @@ require_relative './model.rb'
 #Loggbok
 #Yardoc
 #MVC
-#Meddelande
-#Session
+#Felhantering?
 #_______________________________________________________________________________________________________________________
 
 enable :sessions
+
+#Tror dessa är authorization
+def connect_to_db(path)
+  #Bara en funktion för att snabbt kunna connecta till databasen
+  db = SQLite3::Database.new(path)
+  db.results_as_hash = true
+  return db
+end
+
+def updatera_tiden
+  #Denna sätter tiden till det som är nu med time.now
+  session[:last_comment_time] = Time.now
+end
+
+def kolla_tiden
+  #Denna kolla om tiden är tom eller om det har gått längre än 3 sekunder
+  if session[:last_comment_time].nil?
+    return true
+  else
+    return Time.now - session[:last_comment_time] > 3
+  end
+end
+
+def senaste_tiden
+  #Denna kollar tiden
+  session[:senaste_tiden] ||= Time.now - 61
+end
+
+def tiden_expired?
+  #Denna kollar om det gått mer än...
+  Time.now - senaste_tiden > 5
+end
+
+def senaste_reg
+  #Denna kollar tiden
+  session[:senaste_reg] ||= Time.now - 61
+end
+
+def reg_expired?
+  #Denna kollar om det gått mer än...
+  Time.now - senaste_reg > 5
+end
+
+def uppdatera_senaste_annons_time
+  #Denna uppdaterar din tid
+  session[:senaste_annons_time] = Time.now
+end
+
+def senaste_annons_expired?
+  #Denna kollar om det har gått tillräckligt lång tid
+  if session[:senaste_annons_time].nil?
+    return true
+  else
+    return Time.now - session[:senaste_annons_time] > 5
+  end
+end
+
+def user_annons_id(user_annons_id, user_id)
+  if user_annons_id.nil? || user_id != user_annons_id[0]
+    redirect('/')
+  end
+end
+
+def require_login
+  #Denna kollar om session id är tomt
+  if session[:id].nil?
+    redirect('/')
+  end
+end
+#_______________________________________________________________________________________________________________________
 
 get('/') do
   if session[:id]
