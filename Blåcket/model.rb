@@ -1,5 +1,9 @@
+# Module containing methods related to database operations.
 module Model
 
+  # Method that deletes an entity advertisement from the database.
+  # @param [Integer] id The ID of the entity to be deleted.
+  # @param [String] redirect_path The path to redirect to after deletion.
   def delete_entity(id, redirect_path)
     id = id.to_i
     db = SQLite3::Database.new("db/todo.db")
@@ -11,6 +15,11 @@ module Model
     redirect(redirect_path)
   end
 
+  # Method for registering a new user where it checks the time aswell since last attempt, as well as handles the input if incorrect.
+  # @param [String] username The username of the new user.
+  # @param [String] password The password of the new user.
+  # @param [String] password_confirm The confirmation password of the new user.
+  # @see reg_expired?
   def register_user(username, password, password_confirm)
     if reg_expired?
       session[:senaste_reg] = Time.now
@@ -35,6 +44,11 @@ module Model
     end
   end
 
+  # Method for loggin in a user where it checks the time since last time as well as handls the input if incorrect
+  # @param [String] username The username entered by the user.
+  # @param [String] password The password entered by the user.
+  # @see tiden_expired?
+  # @see connect_to_db
   def user_login(username, password)
     if tiden_expired?
       session[:senaste_tiden] = Time.now
@@ -53,6 +67,10 @@ module Model
     end
   end
 
+  # Method for displays the user's acoount page where it checks if someone is logged in.
+  # @param [Integer] user_id The ID of the current user.
+  # @see require_login
+  # @see connect_to_db
   def konto(user_id)
     require_login
     db = connect_to_db('db/todo.db')
@@ -66,6 +84,8 @@ module Model
     slim(:"users/index",locals:{user:result,username:username})
   end
 
+  # Method for dispaying the advertisment page.
+  # @see connect_to_db
   def annonser()
     db = connect_to_db('db/todo.db')
     annonser = db.execute("SELECT * FROM annonser")
@@ -74,9 +94,12 @@ module Model
       user_info = db.execute("SELECT username FROM users WHERE id = ?", annons['user_id']).first
       annons['username'] = user_info["username"] if user_info
     end
-    slim(:"/annonser/index", locals: { annonser: annonser, genres: genres })
+    slim(:"/annonser/index",locals:{annonser:annonser,genres:genres})
   end
 
+  # Method for filtering advertisements based on selected genre.
+  # @param [String] vald_genre The selected genre for filtering advertisements.
+  # @see connect_to_db
   def annonser_filter(vald_genre)
     db = connect_to_db('db/todo.db')
     if vald_genre == "Alla"
@@ -90,9 +113,12 @@ module Model
       user_info = db.execute("SELECT username FROM users WHERE id = ?", annons['user_id']).first
       annons['username'] = user_info["username"] if user_info
     end
-    slim(:"/annonser/index", locals: { annonser: annonser, genres: genres })
+    slim(:"/annonser/index",locals:{annonser:annonser,genres:genres})
   end
 
+  # Method for searching advertisements based on a query if not emtpy because then it redirects to ('/annonser').
+  # @param [String] query The search query for filtering advertisements.
+  # @see connect_to_db
   def annonser_search(query)
     if query && !query.empty?
       db = connect_to_db('db/todo.db')
@@ -103,12 +129,16 @@ module Model
         user_info = db.execute("SELECT username FROM users WHERE id = ?", annon['user_id']).first
         annon['username'] = user_info["username"] if user_info
       end
-      slim(:"/annonser/index", locals: { annonser: annonser, genres: genres  })
+      slim(:"/annonser/index",locals:{annonser:annonser,genres:genres})
     else
       redirect('/annonser')
     end
   end
 
+  # Method for dispalying the new advertisement page based on who is logged in.
+  # @param [Integer] user_id The ID of the current user.
+  # @see require_login
+  # @see connect_to_db
   def annonser_new(user_id)
     require_login
     db = connect_to_db('db/todo.db')
@@ -118,6 +148,16 @@ module Model
     slim(:"/annonser/new",locals:{username:username,genres:genres})
   end
 
+  # Method for handling the creation of a new advertisement where it validates and handles the input from the form as well as check the time since last new advertisment.
+  # @param [String] content The content/title of the new advertisement.
+  # @param [String] info The additional information of the new advertisement.
+  # @param [String] pris The price of the new advertisement.
+  # @param [Tempfile] img The image file for the new advertisement.
+  # @param [String] genre_name The primary genre of the new advertisement.
+  # @param [String] genre_name2 The secondary genre of the new advertisement.
+  # @param [Integer] user_id The ID of the current user.
+  # @see senaste_annons_expired?
+  # @see connect_to_db
   def annonser_new_post(content, info, pris, img, genre_name, genre_name2, user_id)
 
     if content.nil? || content.strip.empty?
@@ -149,6 +189,11 @@ module Model
     end
   end
 
+  # Method for retrieving user-specific advertisement details.
+  # @param [Integer] user_id The ID of the current user.
+  # @param [Integer] id The ID of the advertisement to be displayed.
+  # @see connect_to_db
+  # @see cuser_annons_id
   def user_id(user_id, id)
     session[:current_annons_id] = id
     db = connect_to_db('db/todo.db')
@@ -161,6 +206,10 @@ module Model
     slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
   end
 
+  # Method for retrieving details of a specific advertisement.
+  # @param [Integer] user_id The ID of the current user.
+  # @param [Integer] id The ID of the advertisement to retrieve details for.
+  # @see connect_to_db
   def annons_id(user_id, id)
     session[:current_annons_id] = id
     db = connect_to_db('db/todo.db')
@@ -171,6 +220,12 @@ module Model
     slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
   end
 
+  # Method for adding a new comment to an advertisement where it chekcs the time since last comment as well as handles and validates the input.
+  # @param [String] comment The content of the new comment.
+  # @param [Integer] user_id The ID of the user adding the comment.
+  # @param [Integer] annons_id The ID of the advertisement to add the comment to.
+  # @see kolla_tiden
+  # @see updatera_tiden
   def comment_new(comment, user_id, annons_id)
     if comment.nil? || comment.strip.empty?
       session[:error] = "Kommentaren får inte vara tom."
@@ -188,12 +243,20 @@ module Model
     end
   end
 
+  # Method for deleting a comment from an advertisement.
+  # @param [Integer] kommentar_id The ID of the comment to be deleted.
+  # @param [Integer] user_id The ID of the user who owns the comment.
+  # @param [Integer] annons_id The ID of the advertisement the comment belongs to.
   def comment_delete(kommentar_id, user_id, annons_id)
     db = SQLite3::Database.new("db/todo.db")
     db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
     redirect("/annons/#{annons_id}")
   end
 
+  # Method for displaying the edit page for an advertisement from a user's acoount page.
+  # @param [Integer] user_id The ID of the current user.
+  # @param [Integer] id The ID of the advertisement to edit.
+  # @see connect_to_db
   def user_edit(user_id, id)
     db = connect_to_db('db/todo.db')
     session[:current_annons_id] = id
@@ -203,6 +266,12 @@ module Model
     slim(:"/annonser/edit",locals:{result:result})
   end
 
+  # Method for updating an advertisement with the new information and validating it and then redirects to the user's account ('/konto').
+  # @param [Integer] id The ID of the advertisement to update.
+  # @param [String] content The new content/title of the advertisement.
+  # @param [String] info The new additional information of the advertisement.
+  # @param [Integer] pris The new price of the advertisement.
+  # @param [String] genre The new genre of the advertisement.
   def user_update(id, content, info, pris, genre)
 
     if content.nil? || content.strip.empty?
@@ -225,5 +294,5 @@ module Model
     end
     redirect('/konto')
   end
-  
+
 end
