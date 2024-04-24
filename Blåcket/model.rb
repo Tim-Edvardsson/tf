@@ -1,17 +1,22 @@
 # Module containing methods related to database operations.
 module Model
 
+  #Fixa denna ny yardoc
   # Method that deletes an entity advertisement from the database.
   # @param [Integer] id The ID of the entity to be deleted.
   # @param [String] redirect_path The path to redirect to after deletion.
-  def delete_entity(id, redirect_path)
-    id = id.to_i
+  def delete_entity(id, user_id, redirect_path)
+    annons_id = id.to_i
     db = SQLite3::Database.new("db/todo.db")
-    kommentar_ids = db.execute("SELECT kommentar_id FROM kommentarer WHERE annons_id = ?", id).flatten
+    user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", annons_id).first
+    if user_id != 1
+      user_annons_id(user_annons_id, user_id)
+    end
+    kommentar_ids = db.execute("SELECT kommentar_id FROM kommentarer WHERE annons_id = ?", annons_id).flatten
     kommentar_ids.each do |kommentar_id|
       db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
     end
-    db.execute("DELETE FROM annonser WHERE id = ?", id)
+    db.execute("DELETE FROM annonser WHERE id = ?", annons_id)
     redirect(redirect_path)
   end
 
@@ -249,6 +254,14 @@ module Model
   # @param [Integer] annons_id The ID of the advertisement the comment belongs to.
   def comment_delete(kommentar_id, user_id, annons_id)
     db = SQLite3::Database.new("db/todo.db")
+    kommentar_annons_id = db.execute("SELECT annons_id FROM kommentarer WHERE kommentar_id = ?", kommentar_id).first
+    annons_user_id = db.execute("SELECT user_id FROM annonser WHERE kommentar_annons_id = ?", annons_id).first
+    puts annons_user_id
+    puts kommentar_user_id
+    puts user_id
+    if user_id != 1
+      user_annons_id(kommentar_user_id, user_id)
+    end
     db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
     redirect("/annons/#{annons_id}")
   end

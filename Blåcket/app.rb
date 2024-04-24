@@ -5,7 +5,7 @@ require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 
-#Jani7
+#Jani8
 #ER
 #Loggbok
 #Bilder
@@ -244,14 +244,16 @@ end
 # @param [Integer] :id The ID of the advertisement to be deleted.
 # @see delete_entity
 post('/annons/:id/delete') do
-  delete_entity(params[:id], '/annonser')
+  user_id = session[:id].to_i
+  delete_entity(params[:id], user_id, '/annonser')
 end
 
 # Route that lets a usere delete its own advertisement and the then redirects to ('/konto').
 # @param [Integer] :id The ID of the user account to be deleted.
 # @see delete_entity
 post('/user/:id/delete') do
-  delete_entity(params[:id], '/konto')
+  user_id = session[:id].to_i
+  delete_entity(params[:id], user_id, '/konto')
 end
 
 # Route that displays and allows a user to access and edit an advertisment.
