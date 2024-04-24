@@ -5,7 +5,7 @@ require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 
-#Jani8
+#Jani9
 #ER
 #Loggbok
 #Bilder
