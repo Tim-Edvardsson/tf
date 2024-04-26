@@ -9,11 +9,8 @@ div#dina_annonser_div
 
     div#annons_spam_div
 
-        - if session[:error]
-            p#fel_meddelande2= session.delete(:error)
-
-        - if session[:error]
-            p#fel_meddelande2= session[:error] 
+        - if $error_message
+            p#fel_meddelande2= $error_message
 
     form#search_form_search(action="/konto" method="GET")
          Input#search_form_search_input(type="text" name="query" placeholder="Sök bland annonser")  
@@ -28,4 +25,5 @@ div#dina_annonser_div
                         a#annons_knapp href="user/#{use['id']}" #{use["content"]} 
                         a#uppdatera_knapp href="user/#{use['id']}/edit" Uppdatera din annons
                         form method="POST" action="user/#{use['id']}/delete"
+                            input type="hidden" name="current_route" value="request.path"
                             input type="submit" value="Delete"

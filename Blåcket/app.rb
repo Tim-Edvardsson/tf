@@ -5,14 +5,25 @@ require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 
-#Jani9
-#ER
-#Loggbok
-#Bilder
+#Jani10
+
+#Ny yardoc och loggbok
+#Session
 
 enable :sessions
 
 include Model
+
+# Array med sökvägar där inloggning inte krävs
+paths_without_login = ['/', '/users/login', '/annonser', '/annonser/filter', '/annonser/search', '/users/new']
+
+#Filtret som kontrollerar inloggning
+before do
+  unless paths_without_login.include?(request.path_info) || request.path_info.match?('/annons/\d+')
+    require_login # Kontrollera om användaren är inloggad för alla routes utom de som är angivna i paths_without_login
+  end
+
+end
 
 # Opens a connection to an SQLite database.
 # @param [String] path the path to the database file
@@ -42,7 +53,7 @@ end
 # Returns the most recent time a user interacted with the system.
 # @return [Time] the most recent time
 def senaste_tiden
-  session[:senaste_tiden] ||= Time.now - 61
+  $senaste_tiden ||= Time.now - 61
 end
 
 # Checks if the time has expired.
@@ -54,7 +65,7 @@ end
 # Returns the timestamp of the most recent registration.
 # @return [Time] the timestamp of the most recent registration
 def senaste_reg
-  session[:senaste_reg] ||= Time.now - 61
+  $senaste_reg ||= Time.now - 61
 end
 
 # Checks if the registration time has expired since last attempt.
@@ -66,16 +77,16 @@ end
 # Updates the timestamp of the last advertisement.
 # @return [Time] the most recent time
 def uppdatera_senaste_annons_time
-  session[:senaste_annons_time] = Time.now
+  $senaste_annons_time = Time.now
 end
 
 # Checks if the time since last advertisement has expired.
 # @return [Boolean] true if more than 5 seconds have passed since the last advertisement, otherwise false
 def senaste_annons_expired?
-  if session[:senaste_annons_time].nil?
+  if $senaste_annons_time.nil?
     return true
   else
-    return Time.now - session[:senaste_annons_time] > 5
+    return Time.now - $senaste_annons_time > 5
   end
 end
 
@@ -112,6 +123,7 @@ end
 # @param [String] :password_confirm The password confirmation provided in the form.
 # @see register_user
 post('/users/new') do
+  print "Hej"
   username = params[:username]
   password = params[:password]
   password_confirm = params[:password_confirm]
@@ -131,7 +143,8 @@ end
 post('/users/login') do
   username = params[:username]
   password = params[:password]
-  user_login(username,password)
+  user_login(username, password)
+
 end
 
 # Route that access and redirects to the users account page.
@@ -193,6 +206,12 @@ post('/annonser/new') do
   genre_name2 = params[:genre2]
   user_id = session[:id].to_i
   annonser_new_post(content, info, pris, img, genre_name, genre_name2, user_id)
+
+  if $error_message
+    redirect("/konto?error=true")
+  else
+    redirect("/konto")
+  end
 end
 
 #Grammar
@@ -216,6 +235,7 @@ get('/annons/:id') do
   annons_id(user_id, id)
 end
 
+#Fixa yardoc
 # Route that create a new comment.
 # @param [String] :comment The content of the comment in the form.
 # @param [Integer] :user_id The ID of the current user.
@@ -225,9 +245,11 @@ post('/comment/new') do
   comment = params[:comment]
   user_id = session[:id].to_i
   annons_id = params[:annons_id].to_i
-  comment_new(comment, user_id, annons_id)
+  current_route = params[:current_route]
+  comment_new(comment, user_id, annons_id, current_route)
 end
 
+#Fixa yardoc
 # Route that lets the owner or an admin delete a comment.
 # @param [Integer] :kommentar_id The ID of the comment to be deleted.
 # @param [Integer] :user_id The ID of the current user.
@@ -237,7 +259,8 @@ post('/comment/:kommentar_id/delete') do
   kommentar_id = params[:kommentar_id].to_i
   user_id = session[:id].to_i
   annons_id = session[:current_annons_id].to_i
-  comment_delete(kommentar_id, user_id, annons_id)
+  current_route = params[:current_route]
+  comment_delete(kommentar_id, user_id, annons_id, current_route)
 end
 
 # Route that lets an admin delete an advertisement and the then redirects to ('/annonser').
@@ -266,6 +289,7 @@ get('/user/:id/edit') do
   user_edit(user_id, id)
 end
 
+#Fixa yardoc
 # Route that updates the information of an advertisment.
 # @param [Integer] :id The ID of the user whose profile is being updated.
 # @param [String] :content The content to be updated in the user profile.
@@ -274,10 +298,11 @@ end
 # @param [String] :genre The genre to be updated in the user profile.
 # @see user_update
 post('/user/:id/update') do
+  user_id = session[:id].to_i
   id = params[:id].to_i
   content = params[:content]
   info = params[:info]
   pris = params[:pris].to_i
   genre = params[:genre]
-  user_update(id, content, info, pris, genre)
+  user_update(id, content, info, pris, genre, user_id)
 end

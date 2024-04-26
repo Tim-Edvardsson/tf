@@ -18,9 +18,11 @@ article#visar_annonser
       form#form action="/comment/new" method="POST" accept-charset="UTF-8"
         input#content type="text" name="comment" placeholder="Skriv din kommentar här"
         input type="hidden" name="annons_id" value="#{result['id']}"
+        input type="hidden" name="current_route" value= request.path
         input#submit_btn_1 type="submit" value="Kommentera"
-    - if session[:error]
-      p#fel_meddelande_2= session.delete(:error)
+    div#annons_spam_div
+      - if $error_message
+          p#fel_meddelande2= $error_message
 
     /*Loopar igenom alla kommentarer och lägger till username. Skiljer också på admin, guest och user
   
@@ -38,4 +40,5 @@ article#visar_annonser
               | #{kommentar['kommentar_username']}: #{kommentar['comment']}
           - if session[:id] && (session[:id] == result['user_id'] || session[:id] == 1)
             form#delete_form action="/comment/#{kommentar['kommentar_id']}/delete" method="POST"
+              input type="hidden" name="current_route" value= request.path
               input#delete_btn type="submit" value="Delete"

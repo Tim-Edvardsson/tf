@@ -1,15 +1,12 @@
 /*Detta är ett form där man kan registrera sig och den visar felmeddelanden
 
-section#login_setion
+section#login_section
   p Register
-  form#form action="users/new" method="POST"
+  form#form action="/users/new" method="POST"
     input#content type="text" name="username" placeholder="Enter username"
     input#content type="password" name="password" placeholder="Enter password"
     input#content type="password" name="password_confirm" placeholder="Enter password again"
     input#submit_btn type="submit" value="Registrera ny användare"
 
-  - if session[:error]
-    p#fel_meddelande= session.delete(:error)  
-
-  - if session[:error]
-    p#fel_meddelande_reg= session.delete(:error)
+  - if $error_message
+      p#fel_meddelande= $error_message

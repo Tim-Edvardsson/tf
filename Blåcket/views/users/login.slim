@@ -7,8 +7,5 @@ section#login_section
         input#content type="password" name="password" placeholder="Enter password"
         input#submit_btn type="submit" value="Logga in"  
 
-    - if session[:error]
-        p#fel_meddelande= session.delete(:error)
-
-    - if locals[:error]
-        p#fel_meddelande= locals[:error]    
+    - if $error_message
+        p#fel_meddelande= $error_message

@@ -20,6 +20,7 @@ module Model
     redirect(redirect_path)
   end
 
+  #Fixa yardoc
   # Method for registering a new user where it checks the time aswell since last attempt, as well as handles the input if incorrect.
   # @param [String] username The username of the new user.
   # @param [String] password The password of the new user.
@@ -27,21 +28,29 @@ module Model
   # @see reg_expired?
   def register_user(username, password, password_confirm)
     if reg_expired?
-      session[:senaste_reg] = Time.now
+      $senaste_reg = Time.now
     else
-      session[:error] = "För snabbt! Försök igen om en stund."
+      $error_message = "För snabbt! Försök igen om en stund."
       redirect('/')
     end
+
     db = SQLite3::Database.new('db/todo.db')
     existing_user = db.execute("SELECT * FROM users WHERE username = ?", username).first
+
     if existing_user
-      session[:error] = "Användarnamnet #{username} är redan taget."
+      $error_message = "Användarnamnet #{username} är redan taget."
       redirect('/')
     elsif password != password_confirm
-      session[:error] = "Lösenordet matchade inte."
+      $error_message = "Lösenordet matchade inte."
       redirect('/')
     elsif username.nil? || username.strip.empty?
-      session[:error] = "Användarnamn får inte vara tomt."
+      $error_message = "Användarnamn får inte vara tomt."
+      redirect('/')
+    elsif username.length < 6
+      $error_message = "Användarnamn måste vara minst sex tecken långt."
+      redirect('/')
+    elsif password.length < 6
+      $error_message = "Lösenordet måste vara minst sex tecken långt."
       redirect('/')
     else
       password_digest = BCrypt::Password.create(password)
@@ -56,9 +65,9 @@ module Model
   # @see connect_to_db
   def user_login(username, password)
     if tiden_expired?
-      session[:senaste_tiden] = Time.now
+      $senaste_tiden = Time.now
     else
-      session[:error] = "För snabbt! Försök igen om en stund."
+      $error_message = "För snabbt! Försök igen om en stund."
       redirect('/users/login')
     end
     db = connect_to_db('db/todo.db')
@@ -68,16 +77,15 @@ module Model
       session[:id] = result["id"]
       redirect ('/konto')
     else
-      slim(:"/users/login",locals:{error: "Fel användarnamn eller lösenord"})
+      $error_message = "Fel användarnamn eller lösenord"
+      redirect('/users/login')
     end
   end
 
   # Method for displays the user's acoount page where it checks if someone is logged in.
   # @param [Integer] user_id The ID of the current user.
-  # @see require_login
   # @see connect_to_db
   def konto(user_id)
-    require_login
     db = connect_to_db('db/todo.db')
     user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
     username = user_info["username"] if user_info
@@ -142,10 +150,8 @@ module Model
 
   # Method for dispalying the new advertisement page based on who is logged in.
   # @param [Integer] user_id The ID of the current user.
-  # @see require_login
   # @see connect_to_db
   def annonser_new(user_id)
-    require_login
     db = connect_to_db('db/todo.db')
     genres = db.execute("SELECT * FROM genre")
     user_info = db.execute("SELECT username FROM users WHERE id = ?", user_id).first
@@ -153,6 +159,8 @@ module Model
     slim(:"/annonser/new",locals:{username:username,genres:genres})
   end
 
+  #Fixa yardoc
+  #Denna också
   # Method for handling the creation of a new advertisement where it validates and handles the input from the form as well as check the time since last new advertisment.
   # @param [String] content The content/title of the new advertisement.
   # @param [String] info The additional information of the new advertisement.
@@ -164,33 +172,30 @@ module Model
   # @see senaste_annons_expired?
   # @see connect_to_db
   def annonser_new_post(content, info, pris, img, genre_name, genre_name2, user_id)
-
     if content.nil? || content.strip.empty?
-      session[:error] = "Titeln på din vara får inte vara tomt."
-      redirect('/konto')
+      $error_message = "Titeln på din vara får inte vara tomt."
+      return
     elsif info.nil? || info.strip.empty?
-      session[:error] = "Information om din vara får inte vara tomt."
-      redirect('/konto')
+      $error_message = "Information om din vara får inte vara tomt."
+      return
     elsif pris.nil? || pris.strip.empty?
-      session[:error] = "Priset på din vara får inte vara tomt."
-      redirect('/konto')
+      $error_message = "Priset på din vara får inte vara tomt."
+      return
     elsif img.nil? || img.strip.empty?
-      session[:error] = "Du måste ha en bild"
-      redirect('/konto')
+      $error_message = "Du måste ha en bild"
+      return
     end
 
     if senaste_annons_expired?
-      session[:senaste_annons_time] = Time.now
+      $senaste_annons_time = Time.now
       db = connect_to_db('db/todo.db')
       db.execute("INSERT INTO annonser (content, genre, user_id, pris, info, img, genre2) VALUES (?,?,?,?,?,?,?)", content, genre_name, user_id, pris, info, img, genre_name2)
       annons_id = db.last_insert_row_id
       genre_id_result = db.execute("SELECT id FROM genre WHERE name = ?", genre_name).first
       genre_id_result2 = db.execute("SELECT id FROM genre WHERE name = ?", genre_name2).first
       db.execute("INSERT INTO genre_annonser (genre_id, genre_id2, annons_id) VALUES (?, ?, ?)", genre_id_result[0], genre_id_result2[0], annons_id)
-      redirect('/konto')
     else
-      session[:error] = "För snabbt! Försök igen om en stund."
-      redirect('/konto')
+      $error_message = "För snabbt! Försök igen om en stund."
     end
   end
 
@@ -200,7 +205,6 @@ module Model
   # @see connect_to_db
   # @see cuser_annons_id
   def user_id(user_id, id)
-    session[:current_annons_id] = id
     db = connect_to_db('db/todo.db')
     user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
     user_annons_id(user_annons_id, user_id)
@@ -216,7 +220,6 @@ module Model
   # @param [Integer] id The ID of the advertisement to retrieve details for.
   # @see connect_to_db
   def annons_id(user_id, id)
-    session[:current_annons_id] = id
     db = connect_to_db('db/todo.db')
     result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
     user_info = db.execute("SELECT username FROM users WHERE id = ?", result['user_id']).first
@@ -225,45 +228,48 @@ module Model
     slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
   end
 
+  #Fixa yardoc
   # Method for adding a new comment to an advertisement where it chekcs the time since last comment as well as handles and validates the input.
   # @param [String] comment The content of the new comment.
   # @param [Integer] user_id The ID of the user adding the comment.
   # @param [Integer] annons_id The ID of the advertisement to add the comment to.
   # @see kolla_tiden
   # @see updatera_tiden
-  def comment_new(comment, user_id, annons_id)
+  def comment_new(comment, user_id, annons_id, current_route)
     if comment.nil? || comment.strip.empty?
-      session[:error] = "Kommentaren får inte vara tom."
-      redirect("/annons/#{annons_id}")
+        $error_message = "Kommentaren får inte vara tom."
+        redirect(current_route)
     end
 
     if kolla_tiden
-      db = SQLite3::Database.new("db/todo.db")
-      db.execute("INSERT INTO kommentarer (comment, user_id, annons_id) VALUES (?, ?, ?)", comment, user_id, annons_id)
-      updatera_tiden
-      redirect("/annons/#{annons_id}")
+        db = SQLite3::Database.new("db/todo.db")
+        db.execute("INSERT INTO kommentarer (comment, user_id, annons_id) VALUES (?, ?, ?)", comment, user_id, annons_id)
+        updatera_tiden
+        redirect(current_route)
     else
-      session[:error] = "Du kan inte lägga till en kommentar så snabbt efter din senaste kommentar."
-      redirect("/annons/#{annons_id}")
+        $error_message = "Du kan inte lägga till en kommentar så snabbt efter din senaste kommentar."
+        redirect(current_route)
     end
-  end
+end
 
+  #Fixa yardoc
   # Method for deleting a comment from an advertisement.
   # @param [Integer] kommentar_id The ID of the comment to be deleted.
   # @param [Integer] user_id The ID of the user who owns the comment.
   # @param [Integer] annons_id The ID of the advertisement the comment belongs to.
-  def comment_delete(kommentar_id, user_id, annons_id)
-    db = SQLite3::Database.new("db/todo.db")
-    kommentar_annons_id = db.execute("SELECT annons_id FROM kommentarer WHERE kommentar_id = ?", kommentar_id).first
-    annons_user_id = db.execute("SELECT user_id FROM annonser WHERE kommentar_annons_id = ?", annons_id).first
-    puts annons_user_id
-    puts kommentar_user_id
-    puts user_id
-    if user_id != 1
-      user_annons_id(kommentar_user_id, user_id)
+  def comment_delete(kommentar_id, user_id, annons_id, current_route)
+    if kommentar_id.nil?
+      redirect(current_route)
+    else
+      db = SQLite3::Database.new("db/todo.db")
+      annons_user_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", annons_id).flatten.first
+      if annons_user_id == user_id || user_id == 1
+        db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
+        redirect(current_route)
+      else
+        redirect(current_route)
+      end
     end
-    db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
-    redirect("/annons/#{annons_id}")
   end
 
   # Method for displaying the edit page for an advertisement from a user's acoount page.
@@ -272,40 +278,45 @@ module Model
   # @see connect_to_db
   def user_edit(user_id, id)
     db = connect_to_db('db/todo.db')
-    session[:current_annons_id] = id
     user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
     user_annons_id(user_annons_id, user_id)
     result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
     slim(:"/annonser/edit",locals:{result:result})
   end
 
+  #Fixa yardoc
   # Method for updating an advertisement with the new information and validating it and then redirects to the user's account ('/konto').
   # @param [Integer] id The ID of the advertisement to update.
   # @param [String] content The new content/title of the advertisement.
   # @param [String] info The new additional information of the advertisement.
   # @param [Integer] pris The new price of the advertisement.
   # @param [String] genre The new genre of the advertisement.
-  def user_update(id, content, info, pris, genre)
-
-    if content.nil? || content.strip.empty?
-      session[:error] = "Titeln på din vara får inte vara tomt."
-      redirect('/konto')
-    elsif info.nil? || info.strip.empty?
-      session[:error] = "Information om din vara får inte vara tomt."
-      redirect('/konto')
-    elsif pris.nil? || pris.zero?
-      session[:error] = "Priset på din vara får inte vara tomt."
-      redirect('/konto')
-    end
-
+  def user_update(id, content, info, pris, genre, user_id)
     db = SQLite3::Database.new("db/todo.db")
-    if params[:img]
-      img = params[:img][:tempfile].read
-      db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, img=? WHERE id = ?", content, genre, pris, info, img, id)
+    annons_user_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).flatten.first
+
+    if user_id == annons_user_id
+      if content.nil? || content.strip.empty?
+        $error_message = "Titeln på din vara får inte vara tomt."
+        redirect('/konto')
+      elsif info.nil? || info.strip.empty?
+        $error_message = "Information om din vara får inte vara tomt."
+        redirect('/konto')
+      elsif pris.nil? || pris.zero?
+        $error_message = "Priset på din vara får inte vara tomt."
+        redirect('/konto')
+      end
+
+      if params[:img]
+        img = params[:img][:tempfile].read
+        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, img=? WHERE id = ?", content, genre, pris, info, img, id)
+      else
+        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=? WHERE id = ?", content, genre, pris, info, id)
+      end
+      redirect('/konto')
     else
-      db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=? WHERE id = ?", content, genre, pris, info, id)
+      redirect('/')
     end
-    redirect('/konto')
   end
 
 end
