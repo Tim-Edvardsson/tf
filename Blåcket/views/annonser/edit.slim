@@ -10,8 +10,11 @@ form#form action="/user/#{result['id']}/update" method="post" enctype="multipart
   input type="hidden" name="id" value="#{result['id']}"
   label#genre_label for="genre-select" Välj genre:
   select#genre_select name="genre"
-    option(value="Fordon" selected=(result['genre'] == 'Fordon')) Fordon
-    option(value="Boende" selected=(result['genre'] == 'Boende')) Boende
-    option(value="Elektronik" selected=(result['genre'] == 'Elektronik')) Elektronik
-    option(value="Annat" selected=(result['genre'] == 'Annat')) Annat
+    - genres.reject { |genre| genre['id'] == 5 }.each do |genre|
+      option(value=genre['name'])= genre['name']
+
+  label#second_genre_label for="second_genre-select" Välj andra genre:
+  select#second_genre_select name="genre2"
+    - genres.each do |genre|
+      option(value=genre['name'])= genre['name']
   input#submit_btn type="submit" value="Spara ändringar"

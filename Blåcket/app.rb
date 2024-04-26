@@ -5,7 +5,7 @@ require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 
-#Jani11
+#Jani13
 
 enable :sessions
 
@@ -195,14 +195,13 @@ get('/annonser/new') do
   annonser_new(user_id)
 end
 
-#Yardoc
 # Route that creates a new advertisement and redirects back to the users page.
 # @param [String] :content The content of the advertisement provided in the form.
 # @param [String] :info Additional information about the advertisement provided in the form.
 # @param [String] :pris The price of the advertisement provided in the form.
 # @param [Tempfile] :img The image file for the advertisement provided in the form.
-# @param [String] :genre The primary genre of the advertisement provided in the form.
-# @param [String] :genre2 The secondary genre of the advertisement provided in the form.
+# @param [String] :genre_name The primary genre of the advertisement provided in the form.
+# @param [String] :genre_name2 The secondary genre of the advertisement provided in the form.
 # @see annonser_new_post
 # @see $error_message
 post('/annonser/new') do
@@ -239,6 +238,7 @@ end
 get('/annons/:id') do
   user_id = session[:id].to_i
   id = params[:id].to_i
+  session[:annons_id] = id
   annons_id(user_id, id)
 end
 
@@ -265,7 +265,7 @@ end
 post('/comment/:kommentar_id/delete') do
   kommentar_id = params[:kommentar_id].to_i
   user_id = session[:id].to_i
-  annons_id = session[:current_annons_id].to_i
+  annons_id = session[:annons_id].to_i
   current_route = params[:current_route]
   comment_delete(kommentar_id, user_id, annons_id, current_route)
 end
@@ -302,7 +302,8 @@ end
 # @param [String] :content The content to be updated in the user profile.
 # @param [String] :info The additional information to be updated in the user profile.
 # @param [Integer] :pris The price to be updated in the user profile.
-# @param [String] :genre The genre to be updated in the user profile.
+# @param [String] :genre_name The genre to be updated in the user profile.
+# @param [String] genre_name2 The second new genre of the advertisement.
 # @see user_update
 post('/user/:id/update') do
   user_id = session[:id].to_i
@@ -310,6 +311,7 @@ post('/user/:id/update') do
   content = params[:content]
   info = params[:info]
   pris = params[:pris].to_i
-  genre = params[:genre]
-  user_update(id, content, info, pris, genre, user_id)
+  genre_name = params[:genre]
+  genre_name2 = params[:genre2]
+  user_update(id, content, info, pris, genre_name, user_id, genre_name2)
 end

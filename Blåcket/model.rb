@@ -18,6 +18,7 @@ module Model
       db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
     end
     db.execute("DELETE FROM annonser WHERE id = ?", annons_id)
+    db.execute("DELETE FROM genre_annonser WHERE annons_id = ?", annons_id)
     redirect(redirect_path)
   end
 
@@ -79,7 +80,6 @@ module Model
     result = db.execute("SELECT * FROM users WHERE username = ?", username).first
     pwdigest = result["pwdigest"] if result
     if result && BCrypt::Password.new(result["pwdigest"]) == password
-      puts "Result #{result["id"]}"
       return{success: true, user_id: result["id"]}
     else
       $error_message = "Fel användarnamn eller lösenord"
@@ -164,8 +164,6 @@ module Model
     slim(:"/annonser/new",locals:{username:username,genres:genres})
   end
 
-  #Fixa yardoc
-  #Denna också
   # Method for handling the creation of a new advertisement where it validates and handles the input from the form as well as check the time since last new advertisment.
   # @param [String] content The content/title of the new advertisement.
   # @param [String] info The additional information of the new advertisement.
@@ -260,7 +258,6 @@ module Model
     end
 end
 
-  #Fixa yardoc
   # Method for deleting a comment from an advertisement.
   # @param [Integer] kommentar_id The ID of the comment to be deleted.
   # @param [Integer] user_id The ID of the user who owns the comment.
@@ -290,7 +287,8 @@ end
     user_annons_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).first
     user_annons_id(user_annons_id, user_id)
     result = db.execute("SELECT * FROM annonser WHERE id = ?", id).first
-    slim(:"/annonser/edit",locals:{result:result})
+    genres = db.execute("SELECT * FROM genre")
+    slim(:"/annonser/edit",locals:{result:result,genres:genres})
   end
 
   # Method for updating an advertisement with the new information and validating it and then redirects to the user's account ('/konto').
@@ -298,13 +296,15 @@ end
   # @param [String] content The new content/title of the advertisement.
   # @param [String] info The new additional information of the advertisement.
   # @param [Integer] pris The new price of the advertisement.
-  # @param [String] genre The new genre of the advertisement.
+  # @param [String] genre_name The new genre of the advertisement.
+  # @param [String] genre_name2 The second new genre of the advertisement.
   # @param [Integer] user_id The ID of the user updating the advertisement.
   # @see $error_message
-  def user_update(id, content, info, pris, genre, user_id)
+  def user_update(id, content, info, pris, genre_name, user_id, genre_name2)
     db = SQLite3::Database.new("db/todo.db")
     annons_user_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).flatten.first
-
+    genre_id = db.execute("SELECT id FROM genre WHERE name = ?", genre_name).flatten.first
+    genre_id2 = db.execute("SELECT id FROM genre WHERE name = ?", genre_name2).flatten.first
     if user_id == annons_user_id
       if content.nil? || content.strip.empty?
         $error_message = "Titeln på din vara får inte vara tomt."
@@ -319,9 +319,10 @@ end
 
       if params[:img]
         img = params[:img][:tempfile].read
-        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, img=? WHERE id = ?", content, genre, pris, info, img, id)
+        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, genre2=?, img=? WHERE id = ?", content, genre_name, pris, info, genre_name2, img, id)
       else
-        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=? WHERE id = ?", content, genre, pris, info, id)
+        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, genre2=? WHERE id = ?", content, genre_name, pris, info, genre_name2, id)
+        db.execute("UPDATE genre_annonser SET genre_id=?, genre_id2=? WHERE annons_id = ?", genre_id, genre_id2, id)
       end
       redirect('/konto')
     else
