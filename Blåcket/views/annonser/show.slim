@@ -23,6 +23,7 @@ article#visar_annonser
     div#annons_spam_div
       - if $error_message
           p#fel_meddelande2= $error_message
+          - $error_message = nil  # Reset the global variable
 
     /*Loopar igenom alla kommentarer och lägger till username. Skiljer också på admin, guest och user
   

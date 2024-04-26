@@ -1,10 +1,11 @@
 # Module containing methods related to database operations.
 module Model
 
-  #Fixa denna ny yardoc
-  # Method that deletes an entity advertisement from the database.
+  # Method that deletes an entity advertisement from the database. It also authenticates and checks the user is the owner
   # @param [Integer] id The ID of the entity to be deleted.
+  # @param [Integer] user_id The ID of the current user performing the deletion.
   # @param [String] redirect_path The path to redirect to after deletion.
+  # @see user_annons_id
   def delete_entity(id, user_id, redirect_path)
     annons_id = id.to_i
     db = SQLite3::Database.new("db/todo.db")
@@ -20,12 +21,13 @@ module Model
     redirect(redirect_path)
   end
 
-  #Fixa yardoc
   # Method for registering a new user where it checks the time aswell since last attempt, as well as handles the input if incorrect.
   # @param [String] username The username of the new user.
   # @param [String] password The password of the new user.
   # @param [String] password_confirm The confirmation password of the new user.
   # @see reg_expired?
+  # @see $senaste_reg
+  # Global variable $error_message stores error messages, which is then displayed
   def register_user(username, password, password_confirm)
     if reg_expired?
       $senaste_reg = Time.now
@@ -61,6 +63,9 @@ module Model
   # Method for loggin in a user where it checks the time since last time as well as handls the input if incorrect
   # @param [String] username The username entered by the user.
   # @param [String] password The password entered by the user.
+  # @return [Hash] A hash containing the login success status and the user ID if authentication is successful.
+  # @see $senaste_tiden
+  # @see $error_message
   # @see tiden_expired?
   # @see connect_to_db
   def user_login(username, password)
@@ -73,9 +78,9 @@ module Model
     db = connect_to_db('db/todo.db')
     result = db.execute("SELECT * FROM users WHERE username = ?", username).first
     pwdigest = result["pwdigest"] if result
-    if result && BCrypt::Password.new(pwdigest) == password
-      session[:id] = result["id"]
-      redirect ('/konto')
+    if result && BCrypt::Password.new(result["pwdigest"]) == password
+      puts "Result #{result["id"]}"
+      return{success: true, user_id: result["id"]}
     else
       $error_message = "Fel användarnamn eller lösenord"
       redirect('/users/login')
@@ -169,7 +174,9 @@ module Model
   # @param [String] genre_name The primary genre of the new advertisement.
   # @param [String] genre_name2 The secondary genre of the new advertisement.
   # @param [Integer] user_id The ID of the current user.
+  # @see $error_message
   # @see senaste_annons_expired?
+  # @see $senaste_annons_time
   # @see connect_to_db
   def annonser_new_post(content, info, pris, img, genre_name, genre_name2, user_id)
     if content.nil? || content.strip.empty?
@@ -228,11 +235,12 @@ module Model
     slim(:"annonser/show",locals:{result:result,username:username,kommentarer:kommentarer})
   end
 
-  #Fixa yardoc
   # Method for adding a new comment to an advertisement where it chekcs the time since last comment as well as handles and validates the input.
   # @param [String] comment The content of the new comment.
   # @param [Integer] user_id The ID of the user adding the comment.
   # @param [Integer] annons_id The ID of the advertisement to add the comment to.
+  # @param [String] current_route The current route from which the comment is being added.
+  # @see $error_message
   # @see kolla_tiden
   # @see updatera_tiden
   def comment_new(comment, user_id, annons_id, current_route)
@@ -257,6 +265,7 @@ end
   # @param [Integer] kommentar_id The ID of the comment to be deleted.
   # @param [Integer] user_id The ID of the user who owns the comment.
   # @param [Integer] annons_id The ID of the advertisement the comment belongs to.
+  # @param [String] current_route The current route from which the comment is being added.
   def comment_delete(kommentar_id, user_id, annons_id, current_route)
     if kommentar_id.nil?
       redirect(current_route)
@@ -284,13 +293,14 @@ end
     slim(:"/annonser/edit",locals:{result:result})
   end
 
-  #Fixa yardoc
   # Method for updating an advertisement with the new information and validating it and then redirects to the user's account ('/konto').
   # @param [Integer] id The ID of the advertisement to update.
   # @param [String] content The new content/title of the advertisement.
   # @param [String] info The new additional information of the advertisement.
   # @param [Integer] pris The new price of the advertisement.
   # @param [String] genre The new genre of the advertisement.
+  # @param [Integer] user_id The ID of the user updating the advertisement.
+  # @see $error_message
   def user_update(id, content, info, pris, genre, user_id)
     db = SQLite3::Database.new("db/todo.db")
     annons_user_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).flatten.first

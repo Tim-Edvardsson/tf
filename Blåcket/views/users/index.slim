@@ -11,6 +11,7 @@ div#dina_annonser_div
 
         - if $error_message
             p#fel_meddelande2= $error_message
+            - $error_message = nil  # Reset the global variable
 
     form#search_form_search(action="/konto" method="GET")
          Input#search_form_search_input(type="text" name="query" placeholder="Sök bland annonser")  

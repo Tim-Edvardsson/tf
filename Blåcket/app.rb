@@ -5,24 +5,22 @@ require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 
-#Jani10
-
-#Ny yardoc och loggbok
-#Session
+#Jani11
 
 enable :sessions
 
 include Model
 
-# Array med sökvägar där inloggning inte krävs
+# Array containing paths where login is not required.
 paths_without_login = ['/', '/users/login', '/annonser', '/annonser/filter', '/annonser/search', '/users/new']
 
-#Filtret som kontrollerar inloggning
+# This filter ensures that the user is logged in for all routes except those specified in `paths_without_login`.
+# @see #paths_without_login
+# @see require_login
 before do
   unless paths_without_login.include?(request.path_info) || request.path_info.match?('/annons/\d+')
-    require_login # Kontrollera om användaren är inloggad för alla routes utom de som är angivna i paths_without_login
+    require_login
   end
-
 end
 
 # Opens a connection to an SQLite database.
@@ -51,6 +49,7 @@ def kolla_tiden
 end
 
 # Returns the most recent time a user interacted with the system.
+# Global variable $senaste_reg stores the timestamp of the most recent interaction.
 # @return [Time] the most recent time
 def senaste_tiden
   $senaste_tiden ||= Time.now - 61
@@ -58,11 +57,13 @@ end
 
 # Checks if the time has expired.
 # @return [Boolean] true if more than 5 seconds have passed since the last interaction, otherwise false
+# @see senaste_tiden
 def tiden_expired?
   Time.now - senaste_tiden > 5
 end
 
 # Returns the timestamp of the most recent registration.
+# Global variable $senaste_reg stores the timestamp of the most recent registration attempt.
 # @return [Time] the timestamp of the most recent registration
 def senaste_reg
   $senaste_reg ||= Time.now - 61
@@ -70,11 +71,13 @@ end
 
 # Checks if the registration time has expired since last attempt.
 # @return [Boolean] true if more than 5 seconds have passed since the last registration, otherwise false
+# @see senaste_reg
 def reg_expired?
   Time.now - senaste_reg > 5
 end
 
 # Updates the timestamp of the last advertisement.
+# Global variable $senaste_annons_time the timestamp of the most recent advertisment
 # @return [Time] the most recent time
 def uppdatera_senaste_annons_time
   $senaste_annons_time = Time.now
@@ -82,6 +85,7 @@ end
 
 # Checks if the time since last advertisement has expired.
 # @return [Boolean] true if more than 5 seconds have passed since the last advertisement, otherwise false
+# @see $senaste_annons_time
 def senaste_annons_expired?
   if $senaste_annons_time.nil?
     return true
@@ -123,7 +127,6 @@ end
 # @param [String] :password_confirm The password confirmation provided in the form.
 # @see register_user
 post('/users/new') do
-  print "Hej"
   username = params[:username]
   password = params[:password]
   password_confirm = params[:password_confirm]
@@ -136,15 +139,18 @@ get('/users/login') do
   slim(:"users/login")
 end
 
-# Route that handles the login information logs in the user
+# Route that handles the login information logs in the user, it also defines the user's id in session
 # @param [String] :username The username provided in the form.
 # @param [String] :password The password provided in the form.
 # @see user_login
 post('/users/login') do
   username = params[:username]
   password = params[:password]
-  user_login(username, password)
-
+  login_result = user_login(username, password)
+  if login_result[:success]
+    session[:id] = login_result[:user_id]
+    redirect('/konto')
+  end
 end
 
 # Route that access and redirects to the users account page.
@@ -189,6 +195,7 @@ get('/annonser/new') do
   annonser_new(user_id)
 end
 
+#Yardoc
 # Route that creates a new advertisement and redirects back to the users page.
 # @param [String] :content The content of the advertisement provided in the form.
 # @param [String] :info Additional information about the advertisement provided in the form.
@@ -197,6 +204,7 @@ end
 # @param [String] :genre The primary genre of the advertisement provided in the form.
 # @param [String] :genre2 The secondary genre of the advertisement provided in the form.
 # @see annonser_new_post
+# @see $error_message
 post('/annonser/new') do
   content = params[:content]
   info = params[:info]
@@ -214,7 +222,6 @@ post('/annonser/new') do
   end
 end
 
-#Grammar
 # Route that accesses the user's advertisements' information.
 # @param [Integer] :user_id The ID of the user.
 # @param [Integer] :id The ID of the user advertisment.
@@ -235,11 +242,11 @@ get('/annons/:id') do
   annons_id(user_id, id)
 end
 
-#Fixa yardoc
 # Route that create a new comment.
 # @param [String] :comment The content of the comment in the form.
 # @param [Integer] :user_id The ID of the current user.
 # @param [Integer] :annons_id The ID of the advertisement to which the comment is posted.
+# @param [String] :current_route The current route from which the comment is submitted.
 # @see comment_new
 post('/comment/new') do
   comment = params[:comment]
@@ -249,11 +256,11 @@ post('/comment/new') do
   comment_new(comment, user_id, annons_id, current_route)
 end
 
-#Fixa yardoc
 # Route that lets the owner or an admin delete a comment.
 # @param [Integer] :kommentar_id The ID of the comment to be deleted.
 # @param [Integer] :user_id The ID of the current user.
 # @param [Integer] annons_id The ID of the current advertisement.
+# @param [String] :current_route The current route from which the comment is submitted.
 # @see comment_delete
 post('/comment/:kommentar_id/delete') do
   kommentar_id = params[:kommentar_id].to_i
@@ -289,9 +296,9 @@ get('/user/:id/edit') do
   user_edit(user_id, id)
 end
 
-#Fixa yardoc
 # Route that updates the information of an advertisment.
-# @param [Integer] :id The ID of the user whose profile is being updated.
+# @param [Integer] user_id The ID of the current user performing the update.
+# @param [Integer] :id The ID of the advertisment that is being updated.
 # @param [String] :content The content to be updated in the user profile.
 # @param [String] :info The additional information to be updated in the user profile.
 # @param [Integer] :pris The price to be updated in the user profile.

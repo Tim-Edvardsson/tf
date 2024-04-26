@@ -9,3 +9,4 @@ section#login_section
 
     - if $error_message
         p#fel_meddelande= $error_message
+        - $error_message = nil  # Reset the global variable
