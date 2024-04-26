@@ -6,6 +6,8 @@ require 'sinatra/reloader'
 require_relative './model.rb'
 
 #Jani13
+#auth
+#Bilder
 
 enable :sessions
 
@@ -100,6 +102,17 @@ end
 def user_annons_id(user_annons_id, user_id)
   if user_annons_id.nil? || user_id != user_annons_id[0]
     redirect('/')
+  end
+end
+
+# Checks if the user coment user ID matches the user ID and redirects to ('/') if true
+# @param [Integer] user_annons_id the user advertisement ID
+# @param [Integer] user_id the user ID
+def user_comment(user_annons_id, user_id)
+  if user_id != 1
+    if user_annons_id.nil? || user_id != user_annons_id
+      redirect('/')
+    end
   end
 end
 
@@ -228,6 +241,7 @@ end
 get('/user/:id') do
   user_id = session[:id].to_i
   id = params[:id].to_i
+  session[:annons_id] = id
   user_id(user_id, id)
 end
 

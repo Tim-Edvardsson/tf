@@ -269,12 +269,9 @@ end
     else
       db = SQLite3::Database.new("db/todo.db")
       annons_user_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", annons_id).flatten.first
-      if annons_user_id == user_id || user_id == 1
-        db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
-        redirect(current_route)
-      else
-        redirect(current_route)
-      end
+      user_comment(annons_user_id, user_id)
+      db.execute("DELETE FROM kommentarer WHERE kommentar_id = ?", kommentar_id)
+      redirect(current_route)
     end
   end
 
@@ -300,34 +297,32 @@ end
   # @param [String] genre_name2 The second new genre of the advertisement.
   # @param [Integer] user_id The ID of the user updating the advertisement.
   # @see $error_message
+  # @see user_annons
   def user_update(id, content, info, pris, genre_name, user_id, genre_name2)
     db = SQLite3::Database.new("db/todo.db")
     annons_user_id = db.execute("SELECT user_id FROM annonser WHERE id = ?", id).flatten.first
     genre_id = db.execute("SELECT id FROM genre WHERE name = ?", genre_name).flatten.first
     genre_id2 = db.execute("SELECT id FROM genre WHERE name = ?", genre_name2).flatten.first
-    if user_id == annons_user_id
-      if content.nil? || content.strip.empty?
-        $error_message = "Titeln på din vara får inte vara tomt."
-        redirect('/konto')
-      elsif info.nil? || info.strip.empty?
-        $error_message = "Information om din vara får inte vara tomt."
-        redirect('/konto')
-      elsif pris.nil? || pris.zero?
-        $error_message = "Priset på din vara får inte vara tomt."
-        redirect('/konto')
-      end
 
-      if params[:img]
-        img = params[:img][:tempfile].read
-        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, genre2=?, img=? WHERE id = ?", content, genre_name, pris, info, genre_name2, img, id)
-      else
-        db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, genre2=? WHERE id = ?", content, genre_name, pris, info, genre_name2, id)
-        db.execute("UPDATE genre_annonser SET genre_id=?, genre_id2=? WHERE annons_id = ?", genre_id, genre_id2, id)
-      end
+    user_annons_id(annons_user_id, user_id)
+    if content.nil? || content.strip.empty?
+      $error_message = "Titeln på din vara får inte vara tomt."
       redirect('/konto')
-    else
-      redirect('/')
+    elsif info.nil? || info.strip.empty?
+      $error_message = "Information om din vara får inte vara tomt."
+      redirect('/konto')
+    elsif pris.nil? || pris.zero?
+      $error_message = "Priset på din vara får inte vara tomt."
+      redirect('/konto')
     end
+    if params[:img]
+      img = params[:img][:tempfile].read
+      db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, genre2=?, img=? WHERE id = ?", content, genre_name, pris, info, genre_name2, img, id)
+    else
+      db.execute("UPDATE annonser SET content=?, genre=?, pris=?, info=?, genre2=? WHERE id = ?", content, genre_name, pris, info, genre_name2, id)
+      db.execute("UPDATE genre_annonser SET genre_id=?, genre_id2=? WHERE annons_id = ?", genre_id, genre_id2, id)
+    end
+    redirect('/konto')
   end
 
 end
