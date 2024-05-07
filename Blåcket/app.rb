@@ -5,7 +5,7 @@ require 'bcrypt'
 require 'sinatra/reloader'
 require_relative './model.rb'
 
-#Jani15
+#Jani16
 
 enable :sessions
 
